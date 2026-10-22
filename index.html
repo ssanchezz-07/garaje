@@ -1,0 +1,1693 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover, interactive-widget=resizes-content">
+  <title>Garaje</title>
+  <link rel="manifest" href="manifest.webmanifest">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="default">
+  <meta name="theme-color" media="(prefers-color-scheme: light)" content="#f6f5f1">
+  <meta name="theme-color" media="(prefers-color-scheme: dark)" content="#141413">
+  <meta name="color-scheme" content="light dark">
+  <link rel="apple-touch-icon" href="icon-192.png">
+  <link rel="icon" type="image/png" href="icon-192.png">
+  <style>
+    /* Garaje móvil v3.0 · mismo sistema que el escritorio; sigue el tema del teléfono */
+    :root {
+      color-scheme: light dark;
+      --bg: #f6f5f1;
+      --surface: #ffffff;
+      --surface-2: #efede7;
+      --line: #e4e1da;
+      --line-strong: #d3cfc6;
+      --text: #1c1b19;
+      --muted: #5e5b55;
+      --light: #74706a;
+      --accent: #2e6b4e;
+      --accent-ink: #ffffff;
+      --accent-soft: #e3ede6;
+      --warn: #8a5a00;
+      --warn-soft: #f7edd6;
+      --danger: #a3352d;
+      --danger-soft: #f8e4e1;
+      --c-fuel: #2e6b4e; --c-fuel-soft: #e3ede6;
+      --c-service: #9a6b2f; --c-service-soft: #f3eadc;
+      --c-expense: #4f6d8a; --c-expense-soft: #e5ebf1;
+      --c-odo: #6d5c8c; --c-odo-soft: #ebe7f2;
+      /* alias que usa el código en línea */
+      --primary: var(--accent);
+      --emerald: var(--accent);
+      --amber: var(--warn);
+      --red: var(--danger);
+      --border-subtle: var(--line);
+      --font: -apple-system, "SF Pro Text", system-ui, "Segoe UI Variable Text", "Segoe UI", Roboto, sans-serif;
+      --font-display: -apple-system, "SF Pro Display", system-ui, "Segoe UI Variable Display", "Segoe UI", Roboto, sans-serif;
+      --r-sm: 8px; --r: 12px; --r-lg: 16px;
+      --ease-out: cubic-bezier(0.23, 1, 0.32, 1);
+      --ease-drawer: cubic-bezier(0.32, 0.72, 0, 1);
+      --nav-h: 64px;
+    }
+    @media (prefers-color-scheme: dark) {
+      :root {
+        --bg: #141413; --surface: #1c1c1a; --surface-2: #262523; --line: #2f2e2b; --line-strong: #3d3c38;
+        --text: #edebe6; --muted: #b3afa7; --light: #918d86;
+        --accent: #7dbf9c; --accent-ink: #0f1a14; --accent-soft: #1f2e26;
+        --warn: #e0b062; --warn-soft: #2e2618; --danger: #ec8a80; --danger-soft: #351f1c;
+        --c-fuel: #7dbf9c; --c-fuel-soft: #1f2e26; --c-service: #d4a868; --c-service-soft: #2f2719;
+        --c-expense: #8db4da; --c-expense-soft: #1c2733; --c-odo: #b4a3d6; --c-odo-soft: #28233a;
+      }
+    }
+
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    html { -webkit-tap-highlight-color: transparent; -webkit-text-size-adjust: 100%; overscroll-behavior: none; }
+    body {
+      font-family: var(--font);
+      font-size: 16px;
+      line-height: 1.45;
+      color: var(--text);
+      background: var(--bg);
+      -webkit-font-smoothing: antialiased;
+      font-variant-numeric: tabular-nums;
+      min-height: 100dvh;
+    }
+    ::selection { background: var(--accent); color: var(--accent-ink); }
+    :focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; border-radius: 4px; }
+    button { font: inherit; color: inherit; background: none; border: 0; cursor: pointer; }
+    button, [onclick], .nav-btn, .m-item-card, .header-badge {
+      touch-action: manipulation; -webkit-user-select: none; user-select: none; -webkit-touch-callout: none;
+    }
+
+    /* Cabecera */
+    header {
+      position: sticky; top: 0; z-index: 40;
+      display: flex; align-items: center; justify-content: space-between; gap: 12px;
+      padding: calc(10px + env(safe-area-inset-top, 0px)) 16px 10px;
+      background: var(--bg);
+      border-bottom: 1px solid var(--line);
+    }
+    .header-badge { display: flex; align-items: center; gap: 10px; min-width: 0; }
+    .header-icon {
+      display: grid; place-items: center; width: 34px; height: 34px; flex: none;
+      border-radius: var(--r-sm); background: var(--accent-soft); color: var(--accent); overflow: hidden;
+    }
+    .header-text { display: flex; flex-direction: column; min-width: 0; line-height: 1.25; }
+    .header-nombre { font-family: var(--font-display); font-weight: 650; font-size: 17px; }
+    .header-sub { font-size: 13px; color: var(--muted); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    .header-actions { display: flex; align-items: center; gap: 8px; }
+    .estado-pill {
+      display: inline-flex; align-items: center; gap: 6px; height: 30px; padding: 0 12px;
+      border-radius: 999px; background: var(--surface-2); font-size: 13px; font-weight: 500; color: var(--muted);
+    }
+    #m-sync-dot { font-size: 9px; color: var(--accent); }
+    .estado-pill.offline #m-sync-dot { color: var(--warn); }
+    .estado-pill:active { transform: scale(0.96); }
+
+    main { padding: 16px 16px calc(var(--nav-h) + 32px + env(safe-area-inset-bottom, 0px)); max-width: 640px; margin: 0 auto; }
+    .seccion { display: none; }
+    .seccion.activa { display: block; animation: entra 220ms var(--ease-out); }
+    @keyframes entra { from { opacity: 0; transform: translateY(6px); } }
+
+    /* Tarjetas genéricas */
+    .card {
+      background: var(--surface); border: 1px solid var(--line); border-radius: var(--r-lg);
+      padding: 16px; margin-bottom: 12px;
+    }
+    .grid-2 { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px; margin-bottom: 10px; }
+
+    /* Resumen */
+    .card-hero { background: none; border: 0; border-radius: 0; padding: 4px 0 20px; margin-bottom: 16px; border-bottom: 1px solid var(--line); }
+    .hero-top { display: flex; justify-content: space-between; align-items: baseline; }
+    .hero-label { font-size: 14px; color: var(--muted); }
+    .hero-gauge-wrap { margin: 4px 0 16px; }
+    .hero-km-big { font-family: var(--font-display); font-size: 56px; font-weight: 600; line-height: 1.02; letter-spacing: -0.035em; }
+    .hero-km-sub { font-size: 15px; color: var(--muted); margin-top: 6px; }
+    .hero-chips { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); border-top: 1px solid var(--line); }
+    .hero-chip { display: flex; flex-direction: column; gap: 2px; padding: 12px 10px 0 0; min-width: 0; }
+    .hero-chip + .hero-chip { padding-left: 12px; border-left: 1px solid var(--line); }
+    .hero-chip span { font-size: 12px; color: var(--muted); }
+    .hero-chip strong { font-family: var(--font-display); font-size: 18px; font-weight: 600; letter-spacing: -0.01em; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+
+    .rec-banner {
+      display: flex; align-items: center; justify-content: space-between; gap: 12px;
+      padding: 12px 14px; margin-bottom: 16px; border-radius: var(--r);
+      background: var(--warn-soft); color: var(--text); cursor: pointer;
+    }
+    .rec-banner-titulo { font-weight: 600; font-size: 15px; }
+    .rec-banner-pill { font-size: 13px; color: var(--muted); }
+    .rec-banner svg { color: var(--warn); flex: none; }
+
+    /* Listas */
+    .m-timeline-group, #m-lista-repostajes-detalle, #m-lista-servicios-detalle, #m-lista-gastos-detalle, #m-lista-odometro-detalle, #m-lista-recs {
+      background: var(--surface); border: 1px solid var(--line); border-radius: var(--r-lg); overflow: hidden; margin-bottom: 16px;
+    }
+    #m-lista-repostajes-detalle:empty, #m-lista-servicios-detalle:empty, #m-lista-gastos-detalle:empty, #m-lista-odometro-detalle:empty, #m-lista-recs:empty { display: none; }
+    .m-item-card {
+      display: flex; align-items: center; justify-content: space-between; gap: 12px;
+      padding: 12px 14px; background: var(--surface); cursor: pointer;
+      transition: background-color 120ms ease;
+    }
+    .m-item-card + .m-item-card { border-top: 1px solid var(--line); }
+    .m-item-card:active { background: var(--surface-2); }
+    .tl-left { display: flex; align-items: center; gap: 12px; min-width: 0; }
+    .tl-right { text-align: right; flex: none; display: flex; align-items: center; gap: 8px; }
+    .tl-badge {
+      display: grid; place-items: center; width: 38px; height: 38px; flex: none;
+      border-radius: var(--r); background: var(--surface-2); color: var(--muted);
+    }
+    .tl-badge svg { width: 20px; height: 20px; }
+    .tipo-repostaje { background: var(--c-fuel-soft); color: var(--c-fuel); }
+    .tipo-servicio { background: var(--c-service-soft); color: var(--c-service); }
+    .tipo-gasto { background: var(--c-expense-soft); color: var(--c-expense); }
+    .tipo-lectura, .tipo-ruta { background: var(--c-odo-soft); color: var(--c-odo); }
+    .tipo-recordatorio { background: var(--warn-soft); color: var(--warn); }
+    .estado-vencido { background: var(--danger-soft); color: var(--danger); }
+    .tl-titulo { font-weight: 600; font-size: 15px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    .tl-sub { font-size: 13px; color: var(--muted); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    .tl-coste { font-weight: 600; font-size: 15px; }
+    .tl-fecha { font-size: 12px; color: var(--light); }
+    .tl-chevron { color: var(--light); font-size: 18px; }
+
+    /* Informes */
+    .m-subtabs {
+      display: flex; gap: 4px; overflow-x: auto; scrollbar-width: none; margin: 0 -16px 16px; padding: 0 16px;
+      border-bottom: 1px solid var(--line); scroll-snap-type: x proximity;
+    }
+    .m-subtabs::-webkit-scrollbar { display: none; }
+    .m-subtab {
+      position: relative; flex: none; padding: 10px 12px 12px; font-size: 15px; font-weight: 500; color: var(--muted);
+      scroll-snap-align: start;
+    }
+    .m-subtab::after {
+      content: ""; position: absolute; left: 12px; right: 12px; bottom: -1px; height: 2px;
+      background: var(--text); transform: scaleX(0); transition: transform 200ms var(--ease-out);
+    }
+    .m-subtabs .m-subtab.activa { color: var(--text); }
+    .m-subtabs .m-subtab.activa::after { transform: scaleX(1); }
+    #v-recordatorios .m-subtab {
+      height: 34px; padding: 0 14px; border-radius: var(--r-sm); background: var(--text); color: var(--bg); font-size: 14px; font-weight: 600;
+    }
+    #v-recordatorios .m-subtab::after { display: none; }
+    .m-panel-inf { display: none; }
+    .m-panel-inf.activo { display: block; animation: entra 200ms var(--ease-out); }
+    .m-stat-card { background: var(--surface); border: 1px solid var(--line); border-radius: var(--r-lg); padding: 14px; min-width: 0; }
+    .m-stat-tit { font-size: 13px; color: var(--muted); font-weight: 500; }
+    .m-stat-num { font-family: var(--font-display); font-size: 22px; font-weight: 600; letter-spacing: -0.015em; margin: 2px 0; }
+    .m-stat-sub { font-size: 12px; color: var(--light); }
+    .m-card-tit { font-family: var(--font-display); font-weight: 600; font-size: 16px; margin-bottom: 6px; }
+    .m-nota { font-size: 14px; color: var(--muted); line-height: 1.45; margin-bottom: 12px; }
+    .m-aviso { color: var(--danger); margin: 8px 0 0; min-height: 1em; }
+    .m-form-nube { display: grid; gap: 8px; }
+    .m-form-nube .btn { margin-top: 0; }
+    .m-titulo-lista { font-size: 13px; font-weight: 600; color: var(--muted); margin: 18px 4px 8px; }
+
+    /* Botones */
+    .btn {
+      display: flex; align-items: center; justify-content: center; gap: 8px; width: 100%;
+      min-height: 50px; margin-top: 8px; padding: 0 16px; border-radius: var(--r);
+      background: var(--accent); color: var(--accent-ink); font-size: 16px; font-weight: 600;
+      transition: transform 120ms var(--ease-out), opacity 150ms ease;
+    }
+    .btn:active { transform: scale(0.98); }
+    .btn:disabled { opacity: 0.5; }
+    .btn-peligro { background: var(--danger-soft); color: var(--danger); }
+    .btn-secundario { background: var(--surface-2); color: var(--text); }
+    .toast {
+      position: fixed; left: 50%; bottom: calc(var(--nav-h) + 16px + env(safe-area-inset-bottom, 0px)); z-index: 200;
+      translate: -50% 0; padding: 10px 16px; border-radius: var(--r); background: var(--text); color: var(--bg);
+      font-size: 14px; font-weight: 500; white-space: nowrap; pointer-events: none;
+      animation: toastEntra 220ms var(--ease-out);
+    }
+    @keyframes toastEntra { from { opacity: 0; transform: translateY(8px); } }
+
+    /* Navegación inferior */
+    nav {
+      position: fixed; left: 0; right: 0; bottom: 0; z-index: 50;
+      display: flex; align-items: center; justify-content: space-around;
+      height: calc(var(--nav-h) + env(safe-area-inset-bottom, 0px));
+      padding: 0 8px env(safe-area-inset-bottom, 0px);
+      background: var(--surface); border-top: 1px solid var(--line);
+    }
+    .nav-btn {
+      flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 3px;
+      height: 52px; color: var(--light); font-size: 11px; font-weight: 500;
+      transition: color 150ms ease, transform 120ms var(--ease-out);
+    }
+    .nav-btn svg { width: 22px; height: 22px; }
+    .nav-btn.activa { color: var(--text); }
+    .nav-btn:active { transform: scale(0.94); }
+    .fab-movil {
+      flex: none; display: grid; place-items: center; width: 52px; height: 44px; margin: 0 6px;
+      border-radius: var(--r); background: var(--accent); color: var(--accent-ink);
+      font-size: 0; transition: transform 140ms var(--ease-out);
+    }
+    .fab-movil svg { width: 24px; height: 24px; }
+    .fab-movil:active { transform: scale(0.94); }
+
+    /* Hojas inferiores */
+    .sheet {
+      position: fixed; inset: 0; z-index: 100; display: flex; flex-direction: column; justify-content: flex-end;
+      background: rgb(20 20 19 / 0.4); opacity: 0; pointer-events: none; transition: opacity 200ms ease;
+    }
+    .sheet.activa { opacity: 1; pointer-events: auto; }
+    .sheet-body {
+      width: 100%; max-width: 640px; margin: 0 auto;
+      background: var(--surface); border-radius: 20px 20px 0 0;
+      padding: 8px 16px calc(16px + env(safe-area-inset-bottom, 0px));
+      max-height: 92dvh; overflow-y: auto; overscroll-behavior: contain;
+      transform: translateY(100%); transition: transform 320ms var(--ease-drawer);
+    }
+    .sheet.activa .sheet-body { transform: translateY(0); }
+    .sheet-handle { width: 36px; height: 5px; border-radius: 3px; background: var(--line-strong); margin: 4px auto 14px; }
+
+    .apple-segmented {
+      display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 2px; padding: 3px; margin-bottom: 16px;
+      border-radius: var(--r); background: var(--surface-2);
+    }
+    .apple-segment {
+      display: flex; flex-direction: column; align-items: center; gap: 2px;
+      padding: 7px 4px; border-radius: 9px; font-size: 12px; font-weight: 600; color: var(--muted);
+      transition: background-color 160ms ease, color 160ms ease;
+    }
+    .apple-segment svg { width: 18px; height: 18px; }
+    .apple-segment.activa { background: var(--surface); color: var(--text); box-shadow: 0 1px 2px rgb(0 0 0 / 0.08), 0 0 0 1px var(--line); }
+
+    .f-grupo { display: flex; flex-direction: column; gap: 6px; margin-bottom: 12px; min-width: 0; }
+    .grid-2 .f-grupo { margin-bottom: 0; }
+    .f-grupo label { font-size: 13px; font-weight: 500; color: var(--muted); }
+    input, select, textarea {
+      width: 100%; min-height: 48px; padding: 10px 12px;
+      border: 1px solid var(--line-strong); border-radius: var(--r-sm);
+      background: var(--surface); color: var(--text); font: inherit; font-size: 16px;
+    }
+    input:focus, select:focus, textarea:focus { outline: none; border-color: var(--accent); box-shadow: 0 0 0 3px var(--accent-soft); }
+    input::placeholder { color: var(--light); }
+    input[type="checkbox"] { min-height: 0; width: 22px !important; height: 22px !important; accent-color: var(--accent); }
+    .toggle-row {
+      display: flex; align-items: center; justify-content: space-between; gap: 12px;
+      min-height: 48px; padding: 0 12px; margin: 2px 0 12px; border-radius: var(--r-sm); background: var(--surface-2); font-size: 15px;
+    }
+
+    @media (hover: hover) and (pointer: fine) {
+      .m-item-card:hover { background: var(--surface-2); }
+      .nav-btn:hover, .m-subtab:hover { color: var(--text); }
+    }
+    @media (prefers-reduced-motion: reduce) {
+      *, *::before, *::after { animation-duration: 1ms !important; transition-duration: 1ms !important; }
+    }
+  </style>
+</head>
+<body>
+
+  <!-- HEADER NATIVO -->
+  <header>
+    <div class="header-badge" id="m-btn-cambiar-veh" title="Cambiar de vehículo">
+      <div class="header-icon" id="m-header-veh-icon">
+        <svg viewBox="0 0 24 24" width="17" height="17" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M19 17h2c.6 0 1-.4 1-1v-3c0-.9-.7-1.7-1.5-1.9C18.7 10.6 16 10 16 10s-1.3-1.4-2.2-2.3c-.5-.4-1.1-.7-1.8-.7H5c-.6 0-1.1.4-1.4.9l-1.5 3c-.1.2-.1.5-.1.8v5.3c0 .6.4 1 1 1h2"/>
+          <circle cx="7" cy="17" r="2"/>
+          <path d="M9 17h6"/>
+          <circle cx="17" cy="17" r="2"/>
+        </svg>
+      </div>
+      <div class="header-text">
+        <span class="header-nombre" id="m-veh-nombre">Garaje</span>
+        <span class="header-sub" id="m-veh-sub"></span>
+      </div>
+    </div>
+    
+    <div class="header-actions">
+      <div class="estado-pill" id="m-estado-pill" onclick="intentarSincronizar()">
+        <span id="m-sync-dot">●</span>
+        <span id="m-sync-texto">Conectado</span>
+      </div>
+    </div>
+  </header>
+
+  <!-- CONTENIDO PRINCIPAL -->
+  <main>
+    
+    <!-- VISTA 1: HISTÓRICO Y TELEMETRÍA -->
+    <section id="v-historico" class="seccion activa">
+      
+      <!-- RESUMEN: autonomía y tres datos -->
+      <div class="card card-hero">
+        <div class="hero-top">
+          <span class="hero-label">Hasta el próximo repostaje</span>
+          <span class="hero-label" id="m-hero-fecha">Hoy</span>
+        </div>
+        <div class="hero-gauge-wrap">
+          <div class="hero-km-big" id="m-hero-km-restantes">— km</div>
+          <div class="hero-km-sub">Próximo repostaje en unos <span id="m-hero-dias-rest">—</span> días</div>
+        </div>
+        <div class="hero-chips">
+          <div class="hero-chip"><span>Combustible al mes</span><strong id="m-chip-mensual">—</strong></div>
+          <div class="hero-chip"><span>Consumo</span><strong id="m-chip-consumo">—</strong></div>
+          <div class="hero-chip"><span>Coste por km</span><strong id="m-chip-coste-km">—</strong></div>
+        </div>
+      </div>
+
+      <!-- BANNER DE RECORDATORIOS -->
+      <div id="m-banner-rec" class="rec-banner" style="display:none;" onclick="mNavegarA('recordatorios')">
+        <div>
+          <div class="rec-banner-titulo" id="m-rec-tit">Próximo Mantenimiento</div>
+          <div class="rec-banner-pill" id="m-rec-pill">En 194 km · En 10 días</div>
+        </div>
+        <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M6 16v-5a6 6 0 0 1 12 0v5l1.5 2h-15z"/><path d="M10 20a2 2 0 0 0 4 0"/></svg>
+      </div>
+
+      <!-- LISTA DE TIMELINE -->
+      <div style="display:flex;justify-content:space-between;align-items:center;margin:18px 4px 10px 4px;">
+        <span class="m-titulo-lista" style="margin:0;">Actividad reciente</span>
+        <span style="font-size:12px;color:var(--primary);font-weight:600;" id="m-total-actividades">3 entradas</span>
+      </div>
+      <div id="m-lista-timeline">
+        <div style="text-align:center;padding:30px;color:var(--muted);font-size:13px;">Cargando...</div>
+      </div>
+    </section>
+
+    <!-- VISTA 2: INFORMES COMPLETOS (TODOS LOS DATOS) -->
+    <section id="v-informes" class="seccion">
+      
+      <!-- SUBTABS DE INFORMES APPLE STYLE -->
+      <div class="m-subtabs">
+        <button class="m-subtab activa" onclick="mCambiarSubtabInforme('general')">General</button>
+        <button class="m-subtab" onclick="mCambiarSubtabInforme('repostajes')">Repostajes</button>
+        <button class="m-subtab" onclick="mCambiarSubtabInforme('servicios')">Servicios</button>
+        <button class="m-subtab" onclick="mCambiarSubtabInforme('gastos')">Gastos</button>
+        <button class="m-subtab" onclick="mCambiarSubtabInforme('odometro')">Odómetro</button>
+      </div>
+
+      <!-- 1. SUBPANEL GENERAL -->
+      <div id="m-panel-inf-general" class="m-panel-inf activo">
+        <div class="grid-2">
+          <div class="m-stat-card">
+            <div class="m-stat-tit">Balance total</div>
+            <div class="m-stat-num" id="m-inf-total">130,00 €</div>
+            <div class="m-stat-sub" id="m-inf-dia-coste">14,44 €/día</div>
+          </div>
+          <div class="m-stat-card">
+            <div class="m-stat-tit">Coste por km</div>
+            <div class="m-stat-num" id="m-inf-km-coste">0,17 €</div>
+            <div class="m-stat-sub">Por km rodado</div>
+          </div>
+        </div>
+
+        <div class="grid-2">
+          <div class="m-stat-card">
+            <div class="m-stat-tit">Distancia total</div>
+            <div class="m-stat-num" id="m-inf-dist">787 km</div>
+            <div class="m-stat-sub" id="m-inf-dia-km">262 km/día</div>
+          </div>
+          <div class="m-stat-card">
+            <div class="m-stat-tit">Consumo medio</div>
+            <div class="m-stat-num" id="m-inf-consumo">6,80 L</div>
+            <div class="m-stat-sub">Medido entre repostajes</div>
+          </div>
+        </div>
+
+        <div class="card">
+          <div class="m-stat-tit" style="margin-bottom:8px;">Proyección próximo repostaje</div>
+          <div style="font-size:24px;font-weight:800;color:var(--text);" id="m-inf-prox-km">143.058 km</div>
+          <div style="font-size:13px;color:var(--amber);font-weight:600;margin-top:4px;" id="m-inf-prox-det">En 194 km · En 10 días</div>
+          <div style="font-size:12px;color:var(--muted);margin-top:10px;padding-top:10px;border-top:1px solid var(--border-subtle);">
+            Proyección mensual de combustible: <strong style="color:var(--text);" id="m-inf-proy-mes">130,00 €</strong>
+          </div>
+        </div>
+      </div>
+
+      <!-- 2. SUBPANEL REPOSTAJES -->
+      <div id="m-panel-inf-repostajes" class="m-panel-inf">
+        <div class="grid-2">
+          <div class="m-stat-card">
+            <div class="m-stat-tit">Gasto combustible</div>
+            <div class="m-stat-num" id="m-rep-gasto-total">0,00 €</div>
+            <div class="m-stat-sub" id="m-rep-litros-total">0 L totales</div>
+          </div>
+          <div class="m-stat-card">
+            <div class="m-stat-tit">Precio medio</div>
+            <div class="m-stat-num" id="m-inf-pmedio">1,700 €</div>
+            <div class="m-stat-sub">Por litro</div>
+          </div>
+        </div>
+        <div class="m-titulo-lista">Histórico de Repostajes</div>
+        <div id="m-lista-repostajes-detalle"></div>
+      </div>
+
+      <!-- 3. SUBPANEL SERVICIOS -->
+      <div id="m-panel-inf-servicios" class="m-panel-inf">
+        <div class="grid-2">
+          <div class="m-stat-card">
+            <div class="m-stat-tit">Gasto en taller</div>
+            <div class="m-stat-num" id="m-srv-gasto-total">0,00 €</div>
+            <div class="m-stat-sub" id="m-srv-cant-total">0 intervenciones</div>
+          </div>
+          <div class="m-stat-card">
+            <div class="m-stat-tit">Último servicio</div>
+            <div class="m-stat-num" style="font-size:15px;padding-top:4px;" id="m-srv-ultimo-fecha">-</div>
+            <div class="m-stat-sub" id="m-srv-ultimo-odo">-</div>
+          </div>
+        </div>
+        <div class="m-titulo-lista">Histórico de Mantenimiento</div>
+        <div id="m-lista-servicios-detalle"></div>
+      </div>
+
+      <!-- 4. SUBPANEL GASTOS -->
+      <div id="m-panel-inf-gastos" class="m-panel-inf">
+        <div class="grid-2">
+          <div class="m-stat-card">
+            <div class="m-stat-tit">Gastos operativos</div>
+            <div class="m-stat-num" id="m-gst-gasto-total">0,00 €</div>
+            <div class="m-stat-sub" id="m-gst-cant-total">0 registros</div>
+          </div>
+          <div class="m-stat-card">
+            <div class="m-stat-tit">Mayor gasto</div>
+            <div class="m-stat-num" id="m-gst-max-gasto">0,00 €</div>
+            <div class="m-stat-sub">Gasto puntual máx.</div>
+          </div>
+        </div>
+        <div class="m-titulo-lista">Histórico de Gastos</div>
+        <div id="m-lista-gastos-detalle"></div>
+      </div>
+
+      <!-- 5. SUBPANEL ODÓMETRO -->
+      <div id="m-panel-inf-odometro" class="m-panel-inf">
+        <div class="grid-2">
+          <div class="m-stat-card">
+            <div class="m-stat-tit">Odómetro actual</div>
+            <div class="m-stat-num" id="m-odo-actual-val">142.864 km</div>
+            <div class="m-stat-sub" id="m-odo-cant-lecturas">0 lecturas</div>
+          </div>
+          <div class="m-stat-card">
+            <div class="m-stat-tit">Ritmo anual</div>
+            <div class="m-stat-num" id="m-odo-ritmo-anual">0 km</div>
+            <div class="m-stat-sub">Proyección / año</div>
+          </div>
+        </div>
+        <div class="m-titulo-lista">Histórico de Kilometraje</div>
+        <div id="m-lista-odometro-detalle"></div>
+      </div>
+
+    </section>
+
+    <!-- VISTA 3: RECORDATORIOS -->
+    <section id="v-recordatorios" class="seccion">
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:14px;">
+        <span class="m-titulo-lista" style="margin:0;">Mantenimiento</span>
+        <button class="m-subtab activa" style="padding:6px 14px;" onclick="mSheetAgregar('recordatorio')">+ Añadir</button>
+      </div>
+      <div id="m-lista-recs"></div>
+    </section>
+
+    <!-- VISTA 4: AJUSTES / SINCRONIZACIÓN -->
+    <section id="v-mas" class="seccion">
+      <div class="card">
+        <div class="m-card-tit">Sincronización con el PC</div>
+        <div id="m-nube"></div>
+        <button class="btn" onclick="intentarSincronizar()" style="margin-top:0;">
+          Sincronizar ahora
+        </button>
+        <div id="m-cola-pendientes" style="font-size:12px;color:var(--muted);margin-top:14px;text-align:center;">
+          Sin cambios pendientes. Todo al día.
+        </div>
+      </div>
+
+      <div class="card">
+        <div class="m-card-tit">Vehículo</div>
+        <div style="display:flex;align-items:center;gap:12px;margin-top:10px;">
+          <div class="header-icon" style="width:36px;height:36px;">
+            <img src="icon-192.png" width="36" height="36" style="border-radius:50%;object-fit:cover;display:block;" alt="Icono">
+          </div>
+          <div>
+            <div style="font-weight:700;font-size:15px;" id="m-ajuste-veh-nom">Chevrolet Aveo</div>
+            <div style="font-size:12px;color:var(--muted);" id="m-ajuste-veh-odo">142.864 km actuales</div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+  </main>
+
+  <!-- NAVEGACIÓN INFERIOR (APPLE FLOATING GLASS DOCK) -->
+  <nav>
+    <button class="nav-btn activa" data-v="historico">
+      <svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 6h16M4 12h16M4 18h10"/></svg>
+      <span>Actividad</span>
+    </button>
+    <button class="nav-btn" data-v="informes">
+      <svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 20V10M10 20V4M16 20v-7M22 20H2"/></svg>
+      <span>Informes</span>
+    </button>
+    
+    <button class="fab-movil" id="m-btn-fab" title="Añadir registro"><svg viewBox="0 0 24 24" width="24" height="24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 5v14M5 12h14"/></svg></button>
+
+    <button class="nav-btn" data-v="recordatorios">
+      <svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M6 16v-5a6 6 0 0 1 12 0v5l1.5 2h-15z"/><path d="M10 20a2 2 0 0 0 4 0"/></svg>
+      <span>Alertas</span>
+    </button>
+    <button class="nav-btn" data-v="mas">
+      <svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="5" cy="12" r="1.2"/><circle cx="12" cy="12" r="1.2"/><circle cx="19" cy="12" r="1.2"/></svg>
+      <span>Ajustes</span>
+    </button>
+  </nav>
+
+  <!-- BOTTOM SHEET 1: FORMULARIO DE REGISTRO (+) APPLE STYLE -->
+  <div class="sheet" id="m-sheet">
+    <div class="sheet-body">
+      <div class="sheet-handle"></div>
+      
+      <!-- Selector de Tipo Apple Segmented -->
+      <div class="apple-segmented">
+        <button class="apple-segment activa" id="m-tab-rep" onclick="mCambiarTipoForm('repostaje')"><svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 20V5a1 1 0 0 1 1-1h8a1 1 0 0 1 1 1v15"/><path d="M3 20h12"/><path d="M6.5 8h5"/><path d="M14 10h2a2 2 0 0 1 2 2v4a1.5 1.5 0 0 0 3 0V8l-3-3"/></svg><span>Repostaje</span></button>
+        <button class="apple-segment" id="m-tab-srv" onclick="mCambiarTipoForm('servicio')"><svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M14.7 6.3a4 4 0 0 0-5.4 5.4L4 17l3 3 5.3-5.3a4 4 0 0 0 5.4-5.4l-2.6 2.6-2.4-.6-.6-2.4z"/></svg><span>Servicio</span></button>
+        <button class="apple-segment" id="m-tab-gst" onclick="mCambiarTipoForm('gasto')"><svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M6 3h12v18l-3-2-3 2-3-2-3 2z"/><path d="M9 8h6M9 12h6"/></svg><span>Gasto</span></button>
+        <button class="apple-segment" id="m-tab-lec" onclick="mCambiarTipoForm('lectura')"><svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 16a8 8 0 1 1 16 0"/><path d="M12 16l4-4"/><path d="M4 20h16"/></svg><span>Odómetro</span></button>
+      </div>
+
+      <input type="hidden" id="m-form-edit-id" value="">
+      <input type="hidden" id="m-form-edit-col" value="">
+
+      <!-- Campos Comunes: Fecha y Hora -->
+      <div class="grid-2">
+        <div class="f-grupo">
+          <label>Fecha</label>
+          <input type="date" id="m-form-fecha">
+        </div>
+        <div class="f-grupo">
+          <label>Hora</label>
+          <input type="time" id="m-form-hora">
+        </div>
+      </div>
+
+      <!-- FORMULARIO: REPOSTAJE -->
+      <div id="m-form-rep">
+        <div class="grid-2">
+          <div class="f-grupo">
+            <label>Odómetro (km)</label>
+            <input type="number" inputmode="numeric" id="m-rep-odo" placeholder="km">
+          </div>
+          <div class="f-grupo">
+            <label>Precio / Litro (€)</label>
+            <input type="number" inputmode="decimal" step="0.001" id="m-rep-precio" placeholder="0,000" oninput="mCalcComb('precio')">
+          </div>
+        </div>
+
+        <div class="grid-2">
+          <div class="f-grupo">
+            <label>Coste Total (€)</label>
+            <input type="number" inputmode="decimal" step="0.01" id="m-rep-total" placeholder="0,00" oninput="mCalcComb('total')">
+          </div>
+          <div class="f-grupo">
+            <label>Litros (L)</label>
+            <input type="number" inputmode="decimal" step="0.01" id="m-rep-litros" placeholder="0,00" oninput="mCalcComb('litros')">
+          </div>
+        </div>
+
+        <div class="toggle-row">
+          <span>¿Depósito lleno?</span>
+          <input type="checkbox" id="m-rep-lleno" checked style="width:20px;height:20px;accent-color:var(--primary);">
+        </div>
+
+        <div class="grid-2">
+          <div class="f-grupo">
+            <label>Tipo Combustible</label>
+            <select id="m-rep-tipo">
+              <option value="Gasolina sin plomo">Gasolina 95</option>
+              <option value="Gasolina 98">Gasolina 98</option>
+              <option value="Diésel">Diésel</option>
+              <option value="Diésel Premium">Diésel Premium</option>
+              <option value="GLP">GLP</option>
+            </select>
+          </div>
+          <div class="f-grupo">
+            <label>Gasolinera / Estación</label>
+            <input type="text" id="m-rep-gas" placeholder="Repsol, Cepsa, BP...">
+          </div>
+        </div>
+
+        <div class="f-grupo">
+          <label>Notas opcionales</label>
+          <input type="text" id="m-rep-notas" placeholder="Ruta, descuento aplicado...">
+        </div>
+
+        <button class="btn" id="m-btn-guardar-rep" onclick="mGuardarRepostaje()">Guardar repostaje</button>
+      </div>
+
+      <!-- FORMULARIO: SERVICIO -->
+      <div id="m-form-srv" style="display:none;">
+        <div class="f-grupo">
+          <label>Tipo de Servicio</label>
+          <select id="m-srv-tipo">
+            <option>Cambio de Aceite</option>
+            <option>Filtro de Aceite</option>
+            <option>Filtro de Aire</option>
+            <option>Pastillas de Freno</option>
+            <option>Discos de Freno</option>
+            <option>Neumáticos</option>
+            <option>Inspección Técnica (ITV)</option>
+            <option>Batería</option>
+            <option>Correa de Distribución</option>
+            <option>Líquido de Frenos</option>
+            <option>Aire Acondicionado</option>
+            <option>Revisión General</option>
+            <option>Otro</option>
+          </select>
+        </div>
+        <div class="grid-2">
+          <div class="f-grupo">
+            <label>Coste (€)</label>
+            <input type="number" inputmode="decimal" step="0.01" id="m-srv-coste" placeholder="0.00">
+          </div>
+          <div class="f-grupo">
+            <label>Odómetro (km)</label>
+            <input type="number" inputmode="numeric" id="m-srv-odo" placeholder="km">
+          </div>
+        </div>
+        <div class="f-grupo">
+          <label>Taller / Mecánico</label>
+          <input type="text" id="m-srv-taller" placeholder="Nombre del taller...">
+        </div>
+        <div class="f-grupo">
+          <label>Notas</label>
+          <textarea id="m-srv-notas" rows="2" placeholder="Observaciones de la revisión..."></textarea>
+        </div>
+        <button class="btn" id="m-btn-guardar-srv" onclick="mGuardarServicio()">Guardar servicio</button>
+      </div>
+
+      <!-- FORMULARIO: GASTO -->
+      <div id="m-form-gst" style="display:none;">
+        <div class="f-grupo">
+          <label>Concepto del Gasto</label>
+          <input type="text" id="m-gst-tit" placeholder="Seguro, ITV, Parking, Lavado, Peaje...">
+        </div>
+        <div class="grid-2">
+          <div class="f-grupo">
+            <label>Coste (€)</label>
+            <input type="number" inputmode="decimal" step="0.01" id="m-gst-coste" placeholder="0.00">
+          </div>
+          <div class="f-grupo">
+            <label>Tipo de Gasto</label>
+            <select id="m-gst-tipo">
+              <option>Seguro</option>
+              <option>Impuesto</option>
+              <option>ITV</option>
+              <option>Parking</option>
+              <option>Peaje</option>
+              <option>Lavado</option>
+              <option>Multa</option>
+              <option>Accesorio</option>
+              <option>Otro</option>
+            </select>
+          </div>
+        </div>
+        <div class="f-grupo">
+          <label>Odómetro (km opcional)</label>
+          <input type="number" inputmode="numeric" id="m-gst-odo" placeholder="km">
+        </div>
+        <div class="f-grupo">
+          <label>Notas</label>
+          <input type="text" id="m-gst-notas" placeholder="Detalle del pago...">
+        </div>
+        <button class="btn" id="m-btn-guardar-gst" onclick="mGuardarGasto()">Guardar gasto</button>
+      </div>
+
+      <!-- FORMULARIO: ODÓMETRO -->
+      <div id="m-form-lec" style="display:none;">
+        <div class="f-grupo">
+          <label>Lectura Actual del Odómetro (km)</label>
+          <input type="number" inputmode="numeric" id="m-lec-odo" placeholder="km">
+        </div>
+        <div class="f-grupo">
+          <label>Notas / Motivo</label>
+          <input type="text" id="m-lec-notas" placeholder="Lectura rutinaria, inicio de viaje...">
+        </div>
+        <button class="btn" id="m-btn-guardar-lec" onclick="mGuardarLectura()">REGISTRAR LECTURA</button>
+      </div>
+
+    </div>
+  </div>
+
+  <!-- BOTTOM SHEET 2: DETALLE Y EDICIÓN DE EVENTO APPLE STYLE -->
+  <div class="sheet" id="m-sheet-detalle">
+    <div class="sheet-body">
+      <div class="sheet-handle"></div>
+      
+      <div style="display:flex;align-items:center;gap:12px;margin-bottom:16px;">
+        <div class="tl-badge" id="m-det-badge" style="width:44px;height:44px;"></div>
+        <div style="flex:1;">
+          <h3 style="font-size:17px;font-weight:700;color:var(--text);" id="m-det-titulo">Detalle del Registro</h3>
+          <div style="font-size:12px;color:var(--muted);" id="m-det-fecha">Fecha y hora</div>
+        </div>
+        <div style="text-align:right;">
+          <div style="font-size:18px;font-weight:700;color:var(--text);" id="m-det-coste">0,00 €</div>
+        </div>
+      </div>
+
+      <div class="card" style="margin-bottom:16px;background:var(--surface-2);border:0;" id="m-det-campos">
+        <!-- Renderizado dinámico de detalles -->
+      </div>
+
+      <div class="grid-2">
+        <button class="btn" id="m-btn-editar-ev" style="margin-top:0;">Editar</button>
+        <button class="btn btn-peligro" id="m-btn-borrar-ev" style="margin-top:0;">Eliminar</button>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    // Iconos de trazo para cada tipo de registro
+    const ICONOS = {
+      repostaje: '<svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 20V5a1 1 0 0 1 1-1h8a1 1 0 0 1 1 1v15"/><path d="M3 20h12"/><path d="M6.5 8h5"/><path d="M14 10h2a2 2 0 0 1 2 2v4a1.5 1.5 0 0 0 3 0V8l-3-3"/></svg>',
+      servicio: '<svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M14.7 6.3a4 4 0 0 0-5.4 5.4L4 17l3 3 5.3-5.3a4 4 0 0 0 5.4-5.4l-2.6 2.6-2.4-.6-.6-2.4z"/></svg>',
+      gasto: '<svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M6 3h12v18l-3-2-3 2-3-2-3 2z"/><path d="M9 8h6M9 12h6"/></svg>',
+      lectura: '<svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 16a8 8 0 1 1 16 0"/><path d="M12 16l4-4"/><path d="M4 20h16"/></svg>',
+      ruta: '<svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 21s-6-5.5-6-11a6 6 0 0 1 12 0c0 5.5-6 11-6 11z"/><circle cx="12" cy="10" r="2"/></svg>',
+      recordatorio: '<svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M6 16v-5a6 6 0 0 1 12 0v5l1.5 2h-15z"/><path d="M10 20a2 2 0 0 0 4 0"/></svg>',
+    };
+
+    function eur(n) { return (Number(n) || 0).toFixed(2).replace('.', ','); }
+    function fechaCorta(iso) {
+      if (!iso) return '';
+      const d = new Date(iso + 'T00:00:00');
+      return isNaN(d) ? iso : d.toLocaleDateString('es-ES', { day: 'numeric', month: 'short' });
+    }
+    function iconoTipo(tipo) { return ICONOS[tipo] || ICONOS.gasto; }
+
+    let datos = { vehiculo: { nombre: 'Garaje', marca: '', odometro_actual_km: 0 }, estadisticas: {}, historico: [], recordatorios: [] };
+    let pendientes = JSON.parse(localStorage.getItem('mc_pendientes') || '[]');
+    let eventoSeleccionado = null;
+
+    // ---------- NUBE (Supabase cifrado; mismo esquema que sincro.py) ----------
+    // Desde el PC (misma Wi-Fi) se habla con /api; fuera de casa, con Supabase.
+    const NUBE_SERVIDOR = 'https://scymqnqxivijudkzajkj.supabase.co';
+    const NUBE_PUBLICA = 'sb_publishable_QWuDZy-chNZvtspmeOMXLg_1ARFAikx';
+    const NUBE_ITER = 250000;
+    const EN_PC = location.port === '8765';
+    let nubeCodigo = null, nubeClave = null, nubeVersion = 0;
+    let enviados = JSON.parse(localStorage.getItem('mc_enviados') || '[]');
+
+    const b64a = b => { let s = ''; new Uint8Array(b).forEach(x => s += String.fromCharCode(x)); return btoa(s); };
+    const ab64 = s => Uint8Array.from(atob(s), c => c.charCodeAt(0));
+    const codigoValido = c => /^[0-9a-f]{40}$/.test(c || '');
+
+    function leerCodigoNube() {
+      const q = new URLSearchParams(location.search).get('c');
+      const h = location.hash.replace('#', '').trim();
+      const c = codigoValido(h) ? h : codigoValido(q) ? q : localStorage.getItem('mc_codigo');
+      if (!codigoValido(c)) return;
+      nubeCodigo = c;
+      localStorage.setItem('mc_codigo', c);
+      // Se deja en ?c= para que la app instalada en la pantalla de inicio lo conserve
+      if (q !== c || h !== c) history.replaceState(null, '', location.pathname + '?c=' + c + '#' + c);
+      const k = localStorage.getItem('mc_clave_' + c);
+      if (k) nubeClave = ab64(k);
+      nubeVersion = Number(localStorage.getItem('mc_version_' + c) || 0);
+    }
+
+    async function derivarClave(pass, cod) {
+      const base = await crypto.subtle.importKey('raw', new TextEncoder().encode(pass), 'PBKDF2', false, ['deriveBits']);
+      return new Uint8Array(await crypto.subtle.deriveBits(
+        { name: 'PBKDF2', hash: 'SHA-256', salt: new TextEncoder().encode('micoche:' + cod), iterations: NUBE_ITER }, base, 256));
+    }
+    async function descifrar(raw, texto) {
+      const k = await crypto.subtle.importKey('raw', raw, 'AES-GCM', false, ['decrypt']);
+      const b = ab64(texto);
+      return JSON.parse(new TextDecoder().decode(await crypto.subtle.decrypt({ name: 'AES-GCM', iv: b.slice(0, 12) }, k, b.slice(12))));
+    }
+    async function cifrar(raw, obj) {
+      const k = await crypto.subtle.importKey('raw', raw, 'AES-GCM', false, ['encrypt']);
+      const iv = crypto.getRandomValues(new Uint8Array(12));
+      const ct = new Uint8Array(await crypto.subtle.encrypt({ name: 'AES-GCM', iv }, k, new TextEncoder().encode(JSON.stringify(obj))));
+      const b = new Uint8Array(12 + ct.length); b.set(iv); b.set(ct, 12);
+      return b64a(b);
+    }
+    async function nubeRpc(fn, cuerpo) {
+      const r = await fetch(NUBE_SERVIDOR + '/rest/v1/rpc/' + fn, {
+        method: 'POST',
+        headers: { apikey: NUBE_PUBLICA, 'Content-Type': 'application/json' },
+        body: JSON.stringify(cuerpo),
+        signal: AbortSignal.timeout(8000)
+      });
+      if (!r.ok) throw new Error('HTTP ' + r.status);
+      const t = await r.text();
+      return t ? JSON.parse(t) : null;
+    }
+
+    // Vuelve a pintar encima lo que el móvil ha enviado y el PC aún no ha aplicado
+    function aplicarEnEspera(d) {
+      const cola = [...enviados, ...pendientes];
+      if (!cola.length || !d.historico) return d;
+      for (const p of cola) {
+        d.historico = d.historico.filter(e => !(e.id === p.item.id));
+        if (!p.eliminar && p.vista) d.historico.unshift(p.vista);
+      }
+      return d;
+    }
+
+    async function sincronizarNube() {
+      // 1) enviar lo pendiente
+      for (const p of [...pendientes]) {
+        const tipo_op = p.eliminar ? 'eliminar' : (p.editar ? 'editar' : 'nuevo');
+        await nubeRpc('enviar_cambio', { p_id: nubeCodigo, p_datos: await cifrar(nubeClave, { tipo_op, coleccion: p.coleccion, datos: p.item }) });
+        pendientes = pendientes.filter(x => x !== p);
+        enviados.push(Object.assign({}, p, { enviado: Date.now() }));
+        localStorage.setItem('mc_pendientes', JSON.stringify(pendientes));
+        localStorage.setItem('mc_enviados', JSON.stringify(enviados));
+      }
+      // 2) leer el resumen que sube el PC
+      const filas = await nubeRpc('leer_resumen', { p_id: nubeCodigo, p_version: nubeVersion }) || [];
+      if (filas.length) {
+        const f = filas[0];
+        const d = await descifrar(nubeClave, f.datos);
+        nubeVersion = f.version;
+        localStorage.setItem('mc_version_' + nubeCodigo, String(f.version));
+        localStorage.setItem('mc_resumen_' + nubeCodigo, JSON.stringify(d));
+        // lo que ya aparece en el resumen del PC deja de estar «en espera»
+        const ids = new Set((d.historico || []).map(e => e.id));
+        const generado = Date.parse(d.generado || 0) || 0;
+        enviados = enviados.filter(p => p.eliminar ? (ids.has(p.item.id) && p.enviado > generado - 60000) : !ids.has(p.item.id));
+        localStorage.setItem('mc_enviados', JSON.stringify(enviados));
+        datos = aplicarEnEspera(Object.assign({ ok: true }, d));
+        localStorage.setItem('mc_cache', JSON.stringify(datos));
+        mRenderizar();
+      }
+      return filas.length > 0;
+    }
+
+    async function mConectarNube(ev) {
+      ev.preventDefault();
+      const pass = document.getElementById('m-nube-pass').value;
+      const aviso = document.getElementById('m-nube-aviso');
+      if (!pass) return;
+      aviso.textContent = 'Comprobando…';
+      try {
+        const clave = await derivarClave(pass, nubeCodigo);
+        const filas = await nubeRpc('leer_resumen', { p_id: nubeCodigo, p_version: 0 }) || [];
+        if (!filas.length) { aviso.textContent = 'Aún no hay datos. Abre Garaje en el ordenador.'; return; }
+        await descifrar(clave, filas[0].datos);   // falla si la contraseña no es la buena
+        nubeClave = clave;
+        nubeVersion = 0;
+        localStorage.setItem('mc_clave_' + nubeCodigo, b64a(clave));
+        aviso.textContent = '';
+        mPintarNube();
+        await intentarSincronizar();
+        mToast('Móvil conectado');
+      } catch (e) {
+        aviso.textContent = e.name === 'OperationError' ? 'La contraseña no es correcta.' : 'Sin conexión. Inténtalo de nuevo.';
+      }
+    }
+
+    function mConectarEnlace(ev) {
+      ev.preventDefault();
+      const m = String(document.getElementById('m-nube-enlace').value || '').match(/[0-9a-f]{40}/);
+      if (!m) { document.getElementById('m-nube-aviso').textContent = 'Ese enlace no es válido.'; return; }
+      location.replace(location.pathname + '?c=' + m[0] + '#' + m[0]);
+    }
+
+    function mDesconectarNube() {
+      if (!nubeCodigo) return;
+      localStorage.removeItem('mc_clave_' + nubeCodigo);
+      nubeClave = null;
+      mPintarNube();
+      mToast('Móvil desconectado de la nube');
+    }
+
+    function mPintarNube() {
+      const el = document.getElementById('m-nube');
+      if (!el) return;
+      if (EN_PC && !nubeCodigo) {
+        el.innerHTML = '<p class="m-nota">Estás conectado al ordenador por la Wi-Fi de casa. Para usar Garaje fuera de casa, activa la sincronización en el PC («Tu móvil») y escanea el código QR.</p>';
+      } else if (!nubeCodigo) {
+        el.innerHTML = `<p class="m-nota">En el PC, abre <b>Tu móvil</b>, activa la sincronización y escanea el código QR. Si abriste Garaje desde la pantalla de inicio, pega aquí el enlace del QR:</p>
+          <form onsubmit="mConectarEnlace(event)" class="m-form-nube">
+            <input id="m-nube-enlace" placeholder="https://…?c=…" autocomplete="off" autocapitalize="none" autocorrect="off" enterkeyhint="go">
+            <button class="btn" type="submit">Conectar</button>
+          </form><p class="m-nota m-aviso" id="m-nube-aviso"></p>`;
+      } else if (!nubeClave) {
+        el.innerHTML = `<p class="m-nota">Escribe la contraseña que pusiste en el PC al activar la sincronización. Solo se guarda en este móvil.</p>
+          <form onsubmit="mConectarNube(event)" class="m-form-nube">
+            <input id="m-nube-pass" type="password" placeholder="Contraseña" autocomplete="current-password" enterkeyhint="go">
+            <button class="btn" type="submit">Conectar</button>
+          </form><p class="m-nota m-aviso" id="m-nube-aviso"></p>`;
+      } else {
+        el.innerHTML = `<p class="m-nota">Conectado a la nube cifrada. Lo que apuntes aquí llega al PC la próxima vez que esté encendido.</p>
+          <button class="btn btn-secundario" onclick="mDesconectarNube()">Desconectar este móvil</button>`;
+      }
+    }
+
+    document.addEventListener('DOMContentLoaded', () => {
+      leerCodigoNube();
+      cargarLocal();
+      configurarNavegacion();
+      mPintarNube();
+      if (!EN_PC && !(nubeCodigo && nubeClave)) mNavegarA('mas');
+      prepararFechasFormulario();
+      intentarSincronizar();
+      setInterval(intentarSincronizar, 15000);
+    });
+
+    function prepararFechasFormulario() {
+      const hoy = new Date();
+      const isoFecha = hoy.toISOString().slice(0, 10);
+      const isoHora = hoy.toTimeString().slice(0, 5);
+      const fInput = document.getElementById('m-form-fecha');
+      const hInput = document.getElementById('m-form-hora');
+      if (fInput) fInput.value = isoFecha;
+      if (hInput) hInput.value = isoHora;
+      const fHero = document.getElementById('m-hero-fecha');
+      if (fHero) fHero.textContent = hoy.toLocaleDateString('es-ES', { day: 'numeric', month: 'short' });
+    }
+
+    function cargarLocal() {
+      const g = localStorage.getItem('mc_cache');
+      if (g) {
+        try { datos = JSON.parse(g); } catch(e){}
+      }
+      mRenderizar();
+    }
+
+    function mRenderizar() {
+      const v = datos.vehiculo || {};
+      const st = datos.estadisticas || {};
+      const bal = st.balance || {};
+      const dist = st.distancia || {};
+      const comb = st.combustible || {};
+      const est = st.estimaciones || {};
+
+      const odo = dist.odometro_actual || v.odometro_actual_km || (datos.vehiculo?.odometro_actual_km || 0);
+
+      // Header y Ajustes
+      document.getElementById('m-veh-nombre').textContent = v.nombre || 'Aveo';
+      document.getElementById('m-veh-sub').textContent = `${v.marca || 'Chevrolet'} · ${Math.round(odo).toLocaleString('es-ES')} km`;
+      const ajNom = document.getElementById('m-ajuste-veh-nom');
+      if (ajNom) ajNom.textContent = `${v.marca || 'Chevrolet'} ${v.nombre || 'Aveo'}`;
+      const ajOdo = document.getElementById('m-ajuste-veh-odo');
+      if (ajOdo) ajOdo.textContent = `${Math.round(odo).toLocaleString('es-ES')} km actuales`;
+
+      // Hero Telemetría
+      const kmRest = Math.max(Math.round(est.km_restantes || 0), 0);
+      const diasRest = Math.max(est.dias_restantes || 0, 0);
+      document.getElementById('m-hero-km-restantes').textContent = `${kmRest} km`;
+      document.getElementById('m-hero-dias-rest').textContent = diasRest;
+      document.getElementById('m-chip-mensual').textContent = est.proyeccion_mensual_eur ? `${est.proyeccion_mensual_eur.toFixed(2).replace('.', ',')} €` : '—';
+      document.getElementById('m-chip-consumo').textContent = comb.consumo_medio_l100km ? `${comb.consumo_medio_l100km.toFixed(2).replace('.', ',')} L` : '—';
+      document.getElementById('m-chip-coste-km').textContent = bal.por_km ? `${bal.por_km.toFixed(2).replace('.', ',')} €` : '—';
+
+      // Gauge SVG
+      const pct = Math.min(Math.max(Math.round((kmRest / 550) * 100), 10), 100);
+      const pctEl = document.getElementById('m-hero-autonomia-pct');
+      if (pctEl) pctEl.textContent = `${pct}%`;
+      const arc = document.getElementById('m-hero-arc');
+      if (arc) {
+        const dashoffset = 264 - (264 * (pct / 100));
+        arc.style.strokeDashoffset = dashoffset;
+      }
+
+      // Pre-cargar odómetro en los formularios
+      ['m-rep-odo', 'm-srv-odo', 'm-gst-odo', 'm-lec-odo'].forEach(id => {
+        const el = document.getElementById(id);
+        if (el) el.value = Math.round(odo);
+      });
+
+      // 1. SUBPANEL GENERAL INFORMES
+      document.getElementById('m-inf-total').textContent = `${eur((bal.total || 0))} €`;
+      document.getElementById('m-inf-dia-coste').textContent = `${eur((bal.por_dia || 0))} €/día`;
+      document.getElementById('m-inf-km-coste').textContent = `${eur((bal.por_km || 0))} €/km`;
+      document.getElementById('m-inf-dist').textContent = `${Math.round(dist.total_km || 0)} km`;
+      document.getElementById('m-inf-dia-km').textContent = `${(dist.promedio_diario_km || 0).toFixed(1)} km/día`;
+      document.getElementById('m-inf-consumo').textContent = `${eur(comb.consumo_medio_l100km || 0)} L/100 km`;
+      document.getElementById('m-inf-prox-km').textContent = `${Math.round(est.proximo_repostaje_km || odo)} km`;
+      document.getElementById('m-inf-prox-det').textContent = `En ${kmRest} km · En ${diasRest} días`;
+      document.getElementById('m-inf-proy-mes').textContent = `${eur((est.proyeccion_mensual_eur || 0))} €`;
+
+      // 2. SUBPANEL REPOSTAJES
+      document.getElementById('m-rep-gasto-total').textContent = `${eur((comb.coste_total || 0))} €`;
+      document.getElementById('m-rep-litros-total').textContent = `${(comb.litros_total || 0).toFixed(1)} L (${comb.repostajes_totales || 0} repostajes)`;
+      document.getElementById('m-inf-pmedio').textContent = `${(comb.precio_medio_l || 0).toFixed(3)} €`;
+
+      // 3. SUBPANEL SERVICIOS
+      const srvs = (datos.historico || []).filter(e => e.coleccion === 'servicios');
+      const totalSrv = srvs.reduce((acc, s) => acc + (s.coste || 0), 0);
+      document.getElementById('m-srv-gasto-total').textContent = `${eur(totalSrv)} €`;
+      document.getElementById('m-srv-cant-total').textContent = `${srvs.length} servicios`;
+      const ultSrv = srvs[0];
+      document.getElementById('m-srv-ultimo-fecha').textContent = ultSrv ? ultSrv.fecha : 'Sin servicios';
+      document.getElementById('m-srv-ultimo-odo').textContent = ultSrv && ultSrv.odometro_km ? `${Math.round(ultSrv.odometro_km)} km` : '-';
+
+      // 4. SUBPANEL GASTOS
+      const gsts = (datos.historico || []).filter(e => e.coleccion === 'gastos');
+      const totalGst = gsts.reduce((acc, g) => acc + (g.coste || 0), 0);
+      const maxGst = gsts.length ? Math.max(...gsts.map(g => g.coste || 0)) : 0;
+      document.getElementById('m-gst-gasto-total').textContent = `${eur(totalGst)} €`;
+      document.getElementById('m-gst-cant-total').textContent = `${gsts.length} gastos`;
+      document.getElementById('m-gst-max-gasto').textContent = `${eur(maxGst)} €`;
+
+      // 5. SUBPANEL ODÓMETRO
+      const odos = (datos.historico || []).filter(e => (e.odometro_km || 0) > 0);
+      document.getElementById('m-odo-actual-val').textContent = `${Math.round(odo).toLocaleString('es-ES')} km`;
+      document.getElementById('m-odo-cant-lecturas').textContent = `${odos.length} lecturas`;
+      document.getElementById('m-odo-ritmo-anual').textContent = `${Math.round((dist.promedio_diario_km || 0) * 365).toLocaleString('es-ES')} km`;
+
+      // Renderizar Listas
+      renderizarTimelineMovil();
+      renderizarListasSubpaneles();
+      renderizarRecordatoriosMovil();
+      actualizarColaPendientes();
+    }
+
+    function renderizarTimelineMovil() {
+      const cont = document.getElementById('m-lista-timeline');
+      const evs = datos.historico || [];
+      const txtTot = document.getElementById('m-total-actividades');
+      if (txtTot) txtTot.textContent = `${evs.length} entradas`;
+
+      if (!evs.length) {
+        cont.innerHTML = `<div style="text-align:center;padding:30px;color:var(--muted);font-size:13px;">Sin registros en tu coche.<br>Pulsa el botón <b>+</b> para añadir combustible o servicio.</div>`;
+        return;
+      }
+
+      cont.innerHTML = `
+        <div class="m-timeline-group">
+          ${evs.map((it, idx) => `
+            <div class="m-item-card" onclick="mVerDetalleEvento(${idx})">
+              <div class="tl-left">
+                <div class="tl-badge tipo-${it.tipo}">${iconoTipo(it.tipo)}</div>
+                <div>
+                  <div class="tl-titulo">${it.titulo}</div>
+                  <div class="tl-sub">${it.subtitulo || ''}</div>
+                </div>
+              </div>
+              <div class="tl-right">
+                <div>
+                  <div class="tl-coste">${it.coste > 0 ? eur(it.coste) + ' €' : ''}</div>
+                  <div class="tl-fecha">${fechaCorta(it.fecha)}</div>
+                </div>
+                <span class="tl-chevron">›</span>
+              </div>
+            </div>
+          `).join('')}
+        </div>
+      `;
+    }
+
+    function renderizarListasSubpaneles() {
+      const evs = datos.historico || [];
+
+      // Repostajes
+      const reps = evs.filter(e => e.coleccion === 'repostajes');
+      const cRep = document.getElementById('m-lista-repostajes-detalle');
+      if (cRep) {
+        cRep.innerHTML = reps.length ? `
+          <div class="m-timeline-group">
+            ${reps.map(r => `
+              <div class="m-item-card" onclick="mVerDetalleObjeto('${r.coleccion}', '${r.id}')">
+                <div class="tl-left">
+                  <div class="tl-badge tipo-repostaje">${iconoTipo('repostaje')}</div>
+                  <div>
+                    <div class="tl-titulo">${r.titulo}</div>
+                    <div class="tl-sub">${r.subtitulo || ''}</div>
+                  </div>
+                </div>
+                <div class="tl-right">
+                  <div>
+                    <div class="tl-coste">${eur(r.coste)} €</div>
+                    <div class="tl-fecha">${fechaCorta(r.fecha)}</div>
+                  </div>
+                  <span class="tl-chevron">›</span>
+                </div>
+              </div>
+            `).join('')}
+          </div>
+        ` : '<div style="text-align:center;padding:20px;color:var(--muted);font-size:12px;">Sin repostajes registrados</div>';
+      }
+
+      // Servicios
+      const srvs = evs.filter(e => e.coleccion === 'servicios');
+      const cSrv = document.getElementById('m-lista-servicios-detalle');
+      if (cSrv) {
+        cSrv.innerHTML = srvs.length ? `
+          <div class="m-timeline-group">
+            ${srvs.map(s => `
+              <div class="m-item-card" onclick="mVerDetalleObjeto('${s.coleccion}', '${s.id}')">
+                <div class="tl-left">
+                  <div class="tl-badge tipo-servicio">${iconoTipo('servicio')}</div>
+                  <div>
+                    <div class="tl-titulo">${s.titulo}</div>
+                    <div class="tl-sub">${s.subtitulo || ''}</div>
+                  </div>
+                </div>
+                <div class="tl-right">
+                  <div>
+                    <div class="tl-coste">${eur(s.coste)} €</div>
+                    <div class="tl-fecha">${fechaCorta(s.fecha)}</div>
+                  </div>
+                  <span class="tl-chevron">›</span>
+                </div>
+              </div>
+            `).join('')}
+          </div>
+        ` : '<div style="text-align:center;padding:20px;color:var(--muted);font-size:12px;">Sin servicios en taller</div>';
+      }
+
+      // Gastos
+      const gsts = evs.filter(e => e.coleccion === 'gastos');
+      const cGst = document.getElementById('m-lista-gastos-detalle');
+      if (cGst) {
+        cGst.innerHTML = gsts.length ? `
+          <div class="m-timeline-group">
+            ${gsts.map(g => `
+              <div class="m-item-card" onclick="mVerDetalleObjeto('${g.coleccion}', '${g.id}')">
+                <div class="tl-left">
+                  <div class="tl-badge tipo-gasto">${iconoTipo('gasto')}</div>
+                  <div>
+                    <div class="tl-titulo">${g.titulo}</div>
+                    <div class="tl-sub">${g.subtitulo || ''}</div>
+                  </div>
+                </div>
+                <div class="tl-right">
+                  <div>
+                    <div class="tl-coste">${eur(g.coste)} €</div>
+                    <div class="tl-fecha">${fechaCorta(g.fecha)}</div>
+                  </div>
+                  <span class="tl-chevron">›</span>
+                </div>
+              </div>
+            `).join('')}
+          </div>
+        ` : '<div style="text-align:center;padding:20px;color:var(--muted);font-size:12px;">Sin gastos registrados</div>';
+      }
+
+      // Odómetro
+      const odos = evs.filter(e => (e.odometro_km || 0) > 0);
+      const cOdo = document.getElementById('m-lista-odometro-detalle');
+      if (cOdo) {
+        cOdo.innerHTML = odos.length ? `
+          <div class="m-timeline-group">
+            ${odos.map(o => `
+              <div class="m-item-card" onclick="mVerDetalleObjeto('${o.coleccion}', '${o.id}')">
+                <div class="tl-left">
+                  <div class="tl-badge tipo-lectura">${iconoTipo('lectura')}</div>
+                  <div>
+                    <div class="tl-titulo">${Math.round(o.odometro_km).toLocaleString('es-ES')} km</div>
+                    <div class="tl-sub">${o.titulo}</div>
+                  </div>
+                </div>
+                <div class="tl-right">
+                  <div class="tl-fecha">${fechaCorta(o.fecha)}</div>
+                  <span class="tl-chevron">›</span>
+                </div>
+              </div>
+            `).join('')}
+          </div>
+        ` : '<div style="text-align:center;padding:20px;color:var(--muted);font-size:12px;">Sin lecturas registradas</div>';
+      }
+    }
+
+    function renderizarRecordatoriosMovil() {
+      const cont = document.getElementById('m-lista-recs');
+      const recs = datos.recordatorios || [];
+      const ban = document.getElementById('m-banner-rec');
+
+      if (!recs.length) {
+        if (ban) ban.style.display = 'none';
+        if (cont) cont.innerHTML = '<div style="text-align:center;padding:30px;color:var(--muted);font-size:13px;">Todo al día. No tienes alertas pendientes.</div>';
+        return;
+      }
+
+      const primero = recs[0];
+      if (ban) {
+        ban.style.display = 'flex';
+        document.getElementById('m-rec-tit').textContent = primero.titulo;
+        document.getElementById('m-rec-pill').textContent = primero.detalle_km || primero.detalle_tiempo || 'Pendiente';
+      }
+
+      if (cont) {
+        cont.innerHTML = `
+          <div class="m-timeline-group">
+            ${recs.map(r => `
+              <div class="m-item-card">
+                <div class="tl-left">
+                  <div class="tl-badge ${r.estado_alerta === 'vencido' ? 'estado-vencido' : (r.estado_alerta === 'urgente' ? 'tipo-recordatorio' : 'tipo-' + (r.tipo === 'repostaje' ? 'repostaje' : 'servicio'))}">${iconoTipo(r.tipo === 'repostaje' ? 'repostaje' : 'servicio')}</div>
+                  <div>
+                    <div class="tl-titulo">${r.titulo}</div>
+                    <div class="tl-sub">${r.detalle_km || ''} ${r.detalle_tiempo ? '· ' + r.detalle_tiempo : ''}</div>
+                  </div>
+                </div>
+                <div class="tl-right">
+                  <span style="font-size:11px;font-weight:700;color:${r.estado_alerta === 'vencido' ? 'var(--red)' : (r.estado_alerta === 'urgente' ? 'var(--amber)' : 'var(--emerald)')};text-transform:uppercase;">${r.estado_alerta}</span>
+                </div>
+              </div>
+            `).join('')}
+          </div>
+        `;
+      }
+    }
+
+    // VER DETALLE DEL EVENTO
+    function mVerDetalleEvento(idx) {
+      const it = (datos.historico || [])[idx];
+      if (it) mMostrarSheetDetalle(it);
+    }
+
+    function mVerDetalleObjeto(coleccion, id) {
+      const it = (datos.historico || []).find(e => e.coleccion === coleccion && e.id === id);
+      if (it) mMostrarSheetDetalle(it);
+    }
+
+    function mMostrarSheetDetalle(it) {
+      eventoSeleccionado = it;
+      const d = it.detalles || {};
+      const detBadge = document.getElementById('m-det-badge');
+      detBadge.innerHTML = iconoTipo(it.tipo);
+      detBadge.className = 'tl-badge tipo-' + it.tipo;
+      document.getElementById('m-det-titulo').textContent = it.titulo || 'Registro';
+      document.getElementById('m-det-fecha').textContent = `${it.fecha || ''} ${it.hora ? '· ' + it.hora : ''}`;
+      document.getElementById('m-det-coste').textContent = it.coste > 0 ? `${eur(it.coste)} €` : '';
+
+      let camposHtml = '';
+      if (it.odometro_km > 0) {
+        camposHtml += `<div style="display:flex;justify-content:space-between;padding:8px 0;font-size:13px;border-bottom:1px solid var(--line);"><span style="color:var(--muted);">Odómetro</span><strong style="color:var(--text);">${Math.round(it.odometro_km).toLocaleString('es-ES')} km</strong></div>`;
+      }
+      if (d.litros > 0) {
+        camposHtml += `<div style="display:flex;justify-content:space-between;padding:8px 0;font-size:13px;border-bottom:1px solid var(--line);"><span style="color:var(--muted);">Litros</span><strong style="color:var(--text);">${d.litros.toFixed(2)} L</strong></div>`;
+        camposHtml += `<div style="display:flex;justify-content:space-between;padding:8px 0;font-size:13px;border-bottom:1px solid var(--line);"><span style="color:var(--muted);">Precio / Litro</span><strong style="color:var(--text);">${(d.precio_litro || 0).toFixed(3)} €/L</strong></div>`;
+      }
+      if (d.gasolinera) {
+        camposHtml += `<div style="display:flex;justify-content:space-between;padding:8px 0;font-size:13px;border-bottom:1px solid var(--line);"><span style="color:var(--muted);">Estación</span><strong style="color:var(--text);">${d.gasolinera}</strong></div>`;
+      }
+      if (d.taller) {
+        camposHtml += `<div style="display:flex;justify-content:space-between;padding:8px 0;font-size:13px;border-bottom:1px solid var(--line);"><span style="color:var(--muted);">Taller</span><strong style="color:var(--text);">${d.taller}</strong></div>`;
+      }
+      if (d.tipo_gasto) {
+        camposHtml += `<div style="display:flex;justify-content:space-between;padding:8px 0;font-size:13px;border-bottom:1px solid var(--line);"><span style="color:var(--muted);">Tipo</span><strong style="color:var(--text);">${d.tipo_gasto}</strong></div>`;
+      }
+      if (d.notas) {
+        camposHtml += `<div style="padding:8px 0;font-size:13px;color:var(--muted);"><span style="color:var(--muted);display:block;margin-bottom:2px;">Notas:</span>${d.notas}</div>`;
+      }
+
+      document.getElementById('m-det-campos').innerHTML = camposHtml || '<div style="font-size:12px;color:var(--muted);">Sin detalles adicionales</div>';
+      document.getElementById('m-sheet-detalle').classList.add('activa');
+
+      // Botón Editar
+      document.getElementById('m-btn-editar-ev').onclick = () => {
+        mCerrarSheetDetalle();
+        mCargarEventoEnFormulario(it);
+      };
+
+      // Botón Borrar
+      document.getElementById('m-btn-borrar-ev').onclick = () => {
+        if (confirm(`¿Eliminar este registro de ${it.titulo}?`)) {
+          mEliminarEvento(it.coleccion, it.id);
+        }
+      };
+    }
+
+    function mCerrarSheetDetalle() {
+      document.getElementById('m-sheet-detalle').classList.remove('activa');
+    }
+
+    function mCargarEventoEnFormulario(it) {
+      const d = it.detalles || {};
+      document.getElementById('m-form-edit-id').value = it.id;
+      document.getElementById('m-form-edit-col').value = it.coleccion;
+      if (it.fecha) document.getElementById('m-form-fecha').value = it.fecha;
+      if (it.hora) document.getElementById('m-form-hora').value = it.hora;
+
+      if (it.coleccion === 'repostajes') {
+        mCambiarTipoForm('repostaje');
+        document.getElementById('m-rep-odo').value = it.odometro_km || '';
+        document.getElementById('m-rep-precio').value = d.precio_litro || '';
+        document.getElementById('m-rep-total').value = it.coste || '';
+        document.getElementById('m-rep-litros').value = d.litros || '';
+        document.getElementById('m-rep-gas').value = d.gasolinera || '';
+        document.getElementById('m-rep-tipo').value = d.combustible || 'Gasolina sin plomo';
+        document.getElementById('m-rep-lleno').checked = d.deposito_lleno !== false;
+        document.getElementById('m-rep-notas').value = d.notas || '';
+        document.getElementById('m-btn-guardar-rep').textContent = 'ACTUALIZAR REPOSTAJE';
+      } else if (it.coleccion === 'servicios') {
+        mCambiarTipoForm('servicio');
+        document.getElementById('m-srv-tipo').value = d.tipo_servicio || 'Cambio de Aceite';
+        document.getElementById('m-srv-coste').value = it.coste || '';
+        document.getElementById('m-srv-odo').value = it.odometro_km || '';
+        document.getElementById('m-srv-taller').value = d.taller || '';
+        document.getElementById('m-srv-notas').value = d.notas || '';
+        document.getElementById('m-btn-guardar-srv').textContent = 'ACTUALIZAR SERVICIO';
+      } else if (it.coleccion === 'gastos') {
+        mCambiarTipoForm('gasto');
+        document.getElementById('m-gst-tit').value = it.titulo || '';
+        document.getElementById('m-gst-coste').value = it.coste || '';
+        document.getElementById('m-gst-tipo').value = d.tipo_gasto || 'Otro';
+        document.getElementById('m-gst-odo').value = it.odometro_km || '';
+        document.getElementById('m-gst-notas').value = d.notas || '';
+        document.getElementById('m-btn-guardar-gst').textContent = 'ACTUALIZAR GASTO';
+      } else if (it.coleccion === 'lecturas') {
+        mCambiarTipoForm('lectura');
+        document.getElementById('m-lec-odo').value = it.odometro_km || '';
+        document.getElementById('m-lec-notas').value = d.notas || '';
+        document.getElementById('m-btn-guardar-lec').textContent = 'ACTUALIZAR LECTURA';
+      }
+      document.getElementById('m-sheet').classList.add('activa');
+    }
+
+    async function mEliminarEvento(coleccion, id) {
+      mCerrarSheetDetalle();
+      datos.historico = datos.historico.filter(e => !(e.coleccion === coleccion && e.id === id));
+      localStorage.setItem('mc_cache', JSON.stringify(datos));
+      mRenderizar();
+      mToast('Registro eliminado');
+
+      pendientes = pendientes.filter(p => p.item.id !== id);
+      pendientes.push({ coleccion, item: { id }, eliminar: true });
+      localStorage.setItem('mc_pendientes', JSON.stringify(pendientes));
+      intentarSincronizar();
+    }
+
+    // SINCRONIZACIÓN
+    function actualizarColaPendientes() {
+      const el = document.getElementById('m-cola-pendientes');
+      if (!el) return;
+      if (pendientes.length) {
+        el.innerHTML = `<b>${pendientes.length} ${pendientes.length === 1 ? 'cambio' : 'cambios'} sin enviar.</b> Se enviarán al recuperar la conexión.`;
+      } else {
+        el.textContent = 'Sin cambios pendientes. Todo al día.';
+      }
+    }
+
+    async function intentarSincronizar() {
+      const txt = document.getElementById('m-sync-texto');
+      const pill = document.getElementById('m-estado-pill');
+      if (txt) txt.textContent = 'Sincronizando…';
+
+      if (EN_PC) {
+        try {
+          const res = await fetch('/api/estado', { signal: AbortSignal.timeout(3500) });
+          if (res.ok) {
+            const d = await res.json();
+            if (d.ok) {
+              datos = d;
+              localStorage.setItem('mc_cache', JSON.stringify(d));
+              if (txt) txt.textContent = 'PC conectado';
+              if (pill) pill.classList.remove('offline');
+              mRenderizar();
+              await subirPendientesServidor();
+              return;
+            }
+          }
+        } catch (e) {}
+      }
+
+      if (nubeCodigo && nubeClave) {
+        try {
+          await sincronizarNube();
+          if (txt) txt.textContent = 'Al día';
+          if (pill) pill.classList.remove('offline');
+          actualizarColaPendientes();
+          return;
+        } catch (e) {}
+      }
+
+      if (txt) txt.textContent = pendientes.length ? `${pendientes.length} sin enviar` : 'Sin conexión';
+      if (pill) pill.classList.add('offline');
+      actualizarColaPendientes();
+    }
+
+    async function subirPendientesServidor() {
+      if (!pendientes.length) return;
+      for (const p of [...pendientes]) {
+        try {
+          let r;
+          if (p.eliminar) {
+            r = await fetch(`/api/evento/${p.coleccion}/${p.item.id}`, { method: 'DELETE' });
+          } else if (p.editar) {
+            r = await fetch(`/api/evento/${p.coleccion}/${p.item.id}`, {
+              method: 'PUT', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ item: p.item })
+            });
+          } else {
+            r = await fetch('/api/evento', {
+              method: 'POST', headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({ coleccion: p.coleccion, item: p.item })
+            });
+          }
+          if (r.ok) {
+            pendientes = pendientes.filter(x => x !== p);
+            localStorage.setItem('mc_pendientes', JSON.stringify(pendientes));
+          }
+        } catch (e) { break; }
+      }
+      actualizarColaPendientes();
+    }
+
+    // CÁLCULO DE COMBUSTIBLE
+    function mCalcComb(orig) {
+      const p = parseFloat(document.getElementById('m-rep-precio').value) || 0;
+      const t = parseFloat(document.getElementById('m-rep-total').value) || 0;
+      const l = parseFloat(document.getElementById('m-rep-litros').value) || 0;
+      if (orig === 'total' && p > 0 && t > 0) document.getElementById('m-rep-litros').value = (t / p).toFixed(2);
+      if (orig === 'litros' && p > 0 && l > 0) document.getElementById('m-rep-total').value = (l * p).toFixed(2);
+    }
+
+    // Guardar repostaje
+    function mGuardarRepostaje() {
+      const editId = document.getElementById('m-form-edit-id').value;
+      const odo = parseFloat(document.getElementById('m-rep-odo').value) || (datos.vehiculo?.odometro_actual_km || 0);
+      const precio = parseFloat(document.getElementById('m-rep-precio').value) || 0;
+      const total = parseFloat(document.getElementById('m-rep-total').value) || 0;
+      const litros = parseFloat(document.getElementById('m-rep-litros').value) || 0;
+      if (!total && !litros) { mToast('Escribe el importe o los litros'); return; }
+      const gas = document.getElementById('m-rep-gas').value || 'Gasolinera';
+      const tipoComb = document.getElementById('m-rep-tipo').value || 'Gasolina sin plomo';
+      const lleno = document.getElementById('m-rep-lleno').checked;
+      const notas = document.getElementById('m-rep-notas').value || '';
+      const fecha = document.getElementById('m-form-fecha').value || new Date().toISOString().slice(0, 10);
+      const hora = document.getElementById('m-form-hora').value || new Date().toTimeString().slice(0, 5);
+
+      const item = {
+        id: editId || ('rep_' + Date.now()),
+        fecha,
+        hora,
+        odometro_km: odo,
+        combustible: tipoComb,
+        precio_litro: precio,
+        coste_total: total,
+        litros,
+        gasolinera: gas,
+        deposito_lleno: lleno,
+        notas
+      };
+
+      const pend = { coleccion: 'repostajes', item, editar: !!editId };
+      pendientes.push(pend);
+      localStorage.setItem('mc_pendientes', JSON.stringify(pendientes));
+
+      // Actualizar vista local
+      datos.historico = datos.historico.filter(e => e.id !== item.id);
+      datos.historico.unshift({
+        id: item.id,
+        coleccion: 'repostajes',
+        tipo: 'repostaje',
+        titulo: tipoComb,
+        subtitulo: `${Math.round(odo)} km · ${litros} L · ${precio} €/L`,
+        coste: total,
+        odometro_km: odo,
+        fecha,
+        hora,
+        detalles: item
+      });
+      if (typeof pend !== 'undefined') { pend.vista = datos.historico[0]; localStorage.setItem('mc_pendientes', JSON.stringify(pendientes)); }
+      datos.vehiculo.odometro_actual_km = odo;
+      localStorage.setItem('mc_cache', JSON.stringify(datos));
+
+      mCerrarSheet();
+      mRenderizar();
+      mToast(editId ? 'Repostaje actualizado' : 'Repostaje guardado');
+      intentarSincronizar();
+      subirPendientesServidor();
+    }
+
+    // Guardar servicio
+    function mGuardarServicio() {
+      const editId = document.getElementById('m-form-edit-id').value;
+      const tipo = document.getElementById('m-srv-tipo').value;
+      const coste = parseFloat(document.getElementById('m-srv-coste').value) || 0;
+      const odo = parseFloat(document.getElementById('m-srv-odo').value) || (datos.vehiculo?.odometro_actual_km || 0);
+      const taller = document.getElementById('m-srv-taller').value || '';
+      const notas = document.getElementById('m-srv-notas').value || '';
+      const fecha = document.getElementById('m-form-fecha').value || new Date().toISOString().slice(0, 10);
+      const hora = document.getElementById('m-form-hora').value || new Date().toTimeString().slice(0, 5);
+
+      const item = { id: editId || ('srv_' + Date.now()), fecha, hora, odometro_km: odo, tipo_servicio: tipo, coste, taller, notas };
+      const pend = { coleccion: 'servicios', item, editar: !!editId };
+      pendientes.push(pend);
+      localStorage.setItem('mc_pendientes', JSON.stringify(pendientes));
+
+      datos.historico = datos.historico.filter(e => e.id !== item.id);
+      datos.historico.unshift({ id: item.id, coleccion: 'servicios', tipo: 'servicio', titulo: tipo, subtitulo: `${Math.round(odo)} km${taller ? ' · ' + taller : ''}`, coste, odometro_km: odo, fecha, hora, color: '#FF6933', icono: '🔧', detalles: item });
+      if (typeof pend !== 'undefined') { pend.vista = datos.historico[0]; localStorage.setItem('mc_pendientes', JSON.stringify(pendientes)); }
+      datos.vehiculo.odometro_actual_km = odo;
+      localStorage.setItem('mc_cache', JSON.stringify(datos));
+
+      mCerrarSheet();
+      mRenderizar();
+      mToast(editId ? 'Servicio actualizado' : 'Servicio guardado');
+      intentarSincronizar();
+      subirPendientesServidor();
+    }
+
+    // Guardar gasto
+    function mGuardarGasto() {
+      const editId = document.getElementById('m-form-edit-id').value;
+      const tit = document.getElementById('m-gst-tit').value || 'Gasto';
+      const coste = parseFloat(document.getElementById('m-gst-coste').value) || 0;
+      const odo = parseFloat(document.getElementById('m-gst-odo').value) || (datos.vehiculo?.odometro_actual_km || 0);
+      const tipoGst = document.getElementById('m-gst-tipo').value || 'Otro';
+      const notas = document.getElementById('m-gst-notas').value || '';
+      const fecha = document.getElementById('m-form-fecha').value || new Date().toISOString().slice(0, 10);
+      const hora = document.getElementById('m-form-hora').value || new Date().toTimeString().slice(0, 5);
+
+      const item = { id: editId || ('gst_' + Date.now()), fecha, hora, odometro_km: odo, titulo: tit, coste, tipo_gasto: tipoGst, notas };
+      const pend = { coleccion: 'gastos', item, editar: !!editId };
+      pendientes.push(pend);
+      localStorage.setItem('mc_pendientes', JSON.stringify(pendientes));
+
+      datos.historico = datos.historico.filter(e => e.id !== item.id);
+      datos.historico.unshift({ id: item.id, coleccion: 'gastos', tipo: 'gasto', titulo: tit, subtitulo: `${Math.round(odo)} km · ${tipoGst}`, coste, odometro_km: odo, fecha, hora, color: '#FF453A', icono: '💳', detalles: item });
+      if (typeof pend !== 'undefined') { pend.vista = datos.historico[0]; localStorage.setItem('mc_pendientes', JSON.stringify(pendientes)); }
+      localStorage.setItem('mc_cache', JSON.stringify(datos));
+
+      mCerrarSheet();
+      mRenderizar();
+      mToast(editId ? 'Gasto actualizado' : 'Gasto guardado');
+      intentarSincronizar();
+      subirPendientesServidor();
+    }
+
+    // Guardar lectura
+    function mGuardarLectura() {
+      const editId = document.getElementById('m-form-edit-id').value;
+      const odo = parseFloat(document.getElementById('m-lec-odo').value) || (datos.vehiculo?.odometro_actual_km || 0);
+      const notas = document.getElementById('m-lec-notas').value || '';
+      const fecha = document.getElementById('m-form-fecha').value || new Date().toISOString().slice(0, 10);
+      const hora = document.getElementById('m-form-hora').value || new Date().toTimeString().slice(0, 5);
+
+      const item = { id: editId || ('lec_' + Date.now()), fecha, hora, odometro_km: odo, notas };
+      const pend = { coleccion: 'lecturas', item, editar: !!editId };
+      pendientes.push(pend);
+      localStorage.setItem('mc_pendientes', JSON.stringify(pendientes));
+
+      datos.historico = datos.historico.filter(e => e.id !== item.id);
+      datos.historico.unshift({ id: item.id, coleccion: 'lecturas', tipo: 'lectura', titulo: `${Math.round(odo)} km`, subtitulo: 'Odómetro', coste: 0, odometro_km: odo, fecha, hora, color: '#FF375F', icono: '⏱', detalles: item });
+      if (typeof pend !== 'undefined') { pend.vista = datos.historico[0]; localStorage.setItem('mc_pendientes', JSON.stringify(pendientes)); }
+      datos.vehiculo.odometro_actual_km = odo;
+      localStorage.setItem('mc_cache', JSON.stringify(datos));
+
+      mCerrarSheet();
+      mRenderizar();
+      mToast(editId ? 'Lectura actualizada' : 'Lectura registrada');
+      intentarSincronizar();
+      subirPendientesServidor();
+    }
+
+    // CAMBIAR SUBTAB FORMULARIO (+) - MAPEO CORREGIDO APPLE
+    function mCambiarTipoForm(t) {
+      const mapa = {
+        'repostaje': 'rep',
+        'rep': 'rep',
+        'servicio': 'srv',
+        'srv': 'srv',
+        'gasto': 'gst',
+        'gst': 'gst',
+        'lectura': 'lec',
+        'lec': 'lec',
+        'odometro': 'lec'
+      };
+      const clave = mapa[t] || 'rep';
+
+      ['rep', 'srv', 'gst', 'lec'].forEach(x => {
+        const f = document.getElementById(`m-form-${x}`);
+        if (f) f.style.display = (x === clave) ? 'block' : 'none';
+        const b = document.getElementById(`m-tab-${x}`);
+        if (b) {
+          if (x === clave) {
+            b.classList.add('activa');
+          } else {
+            b.classList.remove('activa');
+          }
+        }
+      });
+    }
+
+    // CAMBIAR SUBTAB INFORMES
+    function mCambiarSubtabInforme(tab) {
+      document.querySelectorAll('.m-subtab').forEach(b => {
+        if (b.getAttribute('onclick')?.includes(tab)) {
+          b.classList.add('activa');
+        } else if (!b.id?.startsWith('m-tab-')) {
+          b.classList.remove('activa');
+        }
+      });
+
+      ['general', 'repostajes', 'servicios', 'gastos', 'odometro'].forEach(t => {
+        const p = document.getElementById(`m-panel-inf-${t}`);
+        if (p) {
+          if (t === tab) p.classList.add('activo');
+          else p.classList.remove('activo');
+        }
+      });
+    }
+
+    function mSheetAgregar(tipo) {
+      document.getElementById('m-form-edit-id').value = '';
+      document.getElementById('m-form-edit-col').value = '';
+      document.getElementById('m-btn-guardar-rep').textContent = 'Guardar repostaje';
+      document.getElementById('m-btn-guardar-srv').textContent = 'Guardar servicio';
+      document.getElementById('m-btn-guardar-gst').textContent = 'Guardar gasto';
+      document.getElementById('m-btn-guardar-lec').textContent = 'REGISTRAR LECTURA';
+      prepararFechasFormulario();
+      mCambiarTipoForm(tipo || 'repostaje');
+      document.getElementById('m-sheet').classList.add('activa');
+    }
+
+    function mCerrarSheet() {
+      document.getElementById('m-sheet').classList.remove('activa');
+    }
+
+    function mNavegarA(v) {
+      document.querySelectorAll('.nav-btn').forEach(b => {
+        if (b.dataset.v === v) b.classList.add('activa');
+        else b.classList.remove('activa');
+      });
+      document.querySelectorAll('.seccion').forEach(s => s.classList.remove('activa'));
+      const sec = document.getElementById(`v-${v}`);
+      if (sec) sec.classList.add('activa');
+    }
+
+    function configurarNavegacion() {
+      document.querySelectorAll('.nav-btn').forEach(btn => {
+        btn.addEventListener('click', () => {
+          mNavegarA(btn.dataset.v);
+        });
+      });
+
+      document.getElementById('m-btn-fab').addEventListener('click', () => {
+        mSheetAgregar('repostaje');
+      });
+
+      document.getElementById('m-sheet').addEventListener('click', (e) => {
+        if (e.target.id === 'm-sheet') mCerrarSheet();
+      });
+
+      document.getElementById('m-sheet-detalle').addEventListener('click', (e) => {
+        if (e.target.id === 'm-sheet-detalle') mCerrarSheetDetalle();
+      });
+    }
+
+    function mToast(msg) {
+      const t = document.createElement('div');
+      t.className = 'toast';
+      t.textContent = msg;
+      document.body.appendChild(t);
+      setTimeout(() => t.remove(), 2800);
+    }
+  </script>
+</body>
+</html>
