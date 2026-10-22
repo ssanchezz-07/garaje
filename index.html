@@ -1111,7 +1111,7 @@
         cRep.innerHTML = reps.length ? `
           <div class="m-timeline-group">
             ${reps.map(r => `
-              <div class="m-item-card" onclick="mVerDetalleObjeto('${esc(r.coleccion)}', '${esc(r.id)}')">
+              <div class="m-item-card" onclick="mVerDetalleObjeto(${esc(JSON.stringify(String(r.coleccion)))}, ${esc(JSON.stringify(String(r.id)))})">
                 <div class="tl-left">
                   <div class="tl-badge tipo-repostaje">${iconoTipo('repostaje')}</div>
                   <div>
@@ -1139,7 +1139,7 @@
         cSrv.innerHTML = srvs.length ? `
           <div class="m-timeline-group">
             ${srvs.map(s => `
-              <div class="m-item-card" onclick="mVerDetalleObjeto('${esc(s.coleccion)}', '${esc(s.id)}')">
+              <div class="m-item-card" onclick="mVerDetalleObjeto(${esc(JSON.stringify(String(s.coleccion)))}, ${esc(JSON.stringify(String(s.id)))})">
                 <div class="tl-left">
                   <div class="tl-badge tipo-servicio">${iconoTipo('servicio')}</div>
                   <div>
@@ -1167,7 +1167,7 @@
         cGst.innerHTML = gsts.length ? `
           <div class="m-timeline-group">
             ${gsts.map(g => `
-              <div class="m-item-card" onclick="mVerDetalleObjeto('${esc(g.coleccion)}', '${esc(g.id)}')">
+              <div class="m-item-card" onclick="mVerDetalleObjeto(${esc(JSON.stringify(String(g.coleccion)))}, ${esc(JSON.stringify(String(g.id)))})">
                 <div class="tl-left">
                   <div class="tl-badge tipo-gasto">${iconoTipo('gasto')}</div>
                   <div>
@@ -1195,7 +1195,7 @@
         cOdo.innerHTML = odos.length ? `
           <div class="m-timeline-group">
             ${odos.map(o => `
-              <div class="m-item-card" onclick="mVerDetalleObjeto('${esc(o.coleccion)}', '${esc(o.id)}')">
+              <div class="m-item-card" onclick="mVerDetalleObjeto(${esc(JSON.stringify(String(o.coleccion)))}, ${esc(JSON.stringify(String(o.id)))})">
                 <div class="tl-left">
                   <div class="tl-badge tipo-lectura">${iconoTipo('lectura')}</div>
                   <div>
