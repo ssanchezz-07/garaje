@@ -904,7 +904,7 @@
         await intentarSincronizar();
         mToast('Móvil conectado');
       } catch (e) {
-        aviso.textContent = e.name === 'OperationError' ? 'La contraseña no es correcta.' : 'Sin conexión. Inténtalo de nuevo.';
+        aviso.textContent = e.name === 'OperationError' ? 'No coincide con la contraseña del PC (distingue mayúsculas). Si no la recuerdas: en el PC, «Tu móvil» → Desactivar y vuelve a activarla con una nueva.' : 'Sin conexión. Inténtalo de nuevo.';
       }
     }
 
@@ -937,7 +937,7 @@
       } else if (!nubeClave) {
         el.innerHTML = `<p class="m-nota">Escribe la contraseña que pusiste en el PC al activar la sincronización. Solo se guarda en este móvil.</p>
           <form onsubmit="mConectarNube(event)" class="m-form-nube">
-            <input id="m-nube-pass" type="password" placeholder="Contraseña" autocomplete="current-password" enterkeyhint="go">
+            <input id="m-nube-pass" type="password" placeholder="Contraseña" autocomplete="current-password" autocapitalize="none" autocorrect="off" spellcheck="false" enterkeyhint="go">
             <button class="btn" type="submit">Conectar</button>
           </form><p class="m-nota m-aviso" id="m-nube-aviso"></p>`;
       } else {
