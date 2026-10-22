@@ -771,6 +771,7 @@
       const d = new Date(iso + 'T00:00:00');
       return isNaN(d) ? iso : d.toLocaleDateString('es-ES', { day: 'numeric', month: 'short' });
     }
+    const esc = v => String(v ?? '').replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
     function iconoTipo(tipo) { return ICONOS[tipo] || ICONOS.gasto; }
 
     let datos = { vehiculo: { nombre: 'Garaje', marca: '', odometro_actual_km: 0 }, estadisticas: {}, historico: [], recordatorios: [] };
@@ -795,6 +796,16 @@
       const h = location.hash.replace('#', '').trim();
       const c = codigoValido(h) ? h : codigoValido(q) ? q : localStorage.getItem('mc_codigo');
       if (!codigoValido(c)) return;
+      const previo = localStorage.getItem('mc_codigo');
+      if (previo && previo !== c) {
+        // Un enlace con otro código no debe llevarse los registros de este móvil
+        if (!confirm('Este enlace conecta el móvil a otra sincronización distinta. ¿Cambiar? Se descartan los cambios sin enviar.')) {
+          history.replaceState(null, '', location.pathname + '?c=' + previo + '#' + previo);
+          return leerCodigoNube();
+        }
+        ['mc_pendientes', 'mc_enviados', 'mc_cache'].forEach(k => localStorage.removeItem(k));
+        pendientes = []; enviados = [];
+      }
       nubeCodigo = c;
       localStorage.setItem('mc_codigo', c);
       // Se deja en ?c= para que la app instalada en la pantalla de inicio lo conserve
@@ -1073,8 +1084,8 @@
               <div class="tl-left">
                 <div class="tl-badge tipo-${it.tipo}">${iconoTipo(it.tipo)}</div>
                 <div>
-                  <div class="tl-titulo">${it.titulo}</div>
-                  <div class="tl-sub">${it.subtitulo || ''}</div>
+                  <div class="tl-titulo">${esc(it.titulo)}</div>
+                  <div class="tl-sub">${esc(it.subtitulo || '')}</div>
                 </div>
               </div>
               <div class="tl-right">
@@ -1100,12 +1111,12 @@
         cRep.innerHTML = reps.length ? `
           <div class="m-timeline-group">
             ${reps.map(r => `
-              <div class="m-item-card" onclick="mVerDetalleObjeto('${r.coleccion}', '${r.id}')">
+              <div class="m-item-card" onclick="mVerDetalleObjeto('${esc(r.coleccion)}', '${esc(r.id)}')">
                 <div class="tl-left">
                   <div class="tl-badge tipo-repostaje">${iconoTipo('repostaje')}</div>
                   <div>
-                    <div class="tl-titulo">${r.titulo}</div>
-                    <div class="tl-sub">${r.subtitulo || ''}</div>
+                    <div class="tl-titulo">${esc(r.titulo)}</div>
+                    <div class="tl-sub">${esc(r.subtitulo || '')}</div>
                   </div>
                 </div>
                 <div class="tl-right">
@@ -1128,12 +1139,12 @@
         cSrv.innerHTML = srvs.length ? `
           <div class="m-timeline-group">
             ${srvs.map(s => `
-              <div class="m-item-card" onclick="mVerDetalleObjeto('${s.coleccion}', '${s.id}')">
+              <div class="m-item-card" onclick="mVerDetalleObjeto('${esc(s.coleccion)}', '${esc(s.id)}')">
                 <div class="tl-left">
                   <div class="tl-badge tipo-servicio">${iconoTipo('servicio')}</div>
                   <div>
-                    <div class="tl-titulo">${s.titulo}</div>
-                    <div class="tl-sub">${s.subtitulo || ''}</div>
+                    <div class="tl-titulo">${esc(s.titulo)}</div>
+                    <div class="tl-sub">${esc(s.subtitulo || '')}</div>
                   </div>
                 </div>
                 <div class="tl-right">
@@ -1156,12 +1167,12 @@
         cGst.innerHTML = gsts.length ? `
           <div class="m-timeline-group">
             ${gsts.map(g => `
-              <div class="m-item-card" onclick="mVerDetalleObjeto('${g.coleccion}', '${g.id}')">
+              <div class="m-item-card" onclick="mVerDetalleObjeto('${esc(g.coleccion)}', '${esc(g.id)}')">
                 <div class="tl-left">
                   <div class="tl-badge tipo-gasto">${iconoTipo('gasto')}</div>
                   <div>
-                    <div class="tl-titulo">${g.titulo}</div>
-                    <div class="tl-sub">${g.subtitulo || ''}</div>
+                    <div class="tl-titulo">${esc(g.titulo)}</div>
+                    <div class="tl-sub">${esc(g.subtitulo || '')}</div>
                   </div>
                 </div>
                 <div class="tl-right">
@@ -1184,12 +1195,12 @@
         cOdo.innerHTML = odos.length ? `
           <div class="m-timeline-group">
             ${odos.map(o => `
-              <div class="m-item-card" onclick="mVerDetalleObjeto('${o.coleccion}', '${o.id}')">
+              <div class="m-item-card" onclick="mVerDetalleObjeto('${esc(o.coleccion)}', '${esc(o.id)}')">
                 <div class="tl-left">
                   <div class="tl-badge tipo-lectura">${iconoTipo('lectura')}</div>
                   <div>
                     <div class="tl-titulo">${Math.round(o.odometro_km).toLocaleString('es-ES')} km</div>
-                    <div class="tl-sub">${o.titulo}</div>
+                    <div class="tl-sub">${esc(o.titulo)}</div>
                   </div>
                 </div>
                 <div class="tl-right">
@@ -1229,8 +1240,8 @@
                 <div class="tl-left">
                   <div class="tl-badge ${r.estado_alerta === 'vencido' ? 'estado-vencido' : (r.estado_alerta === 'urgente' ? 'tipo-recordatorio' : 'tipo-' + (r.tipo === 'repostaje' ? 'repostaje' : 'servicio'))}">${iconoTipo(r.tipo === 'repostaje' ? 'repostaje' : 'servicio')}</div>
                   <div>
-                    <div class="tl-titulo">${r.titulo}</div>
-                    <div class="tl-sub">${r.detalle_km || ''} ${r.detalle_tiempo ? '· ' + r.detalle_tiempo : ''}</div>
+                    <div class="tl-titulo">${esc(r.titulo)}</div>
+                    <div class="tl-sub">${esc(r.detalle_km || '')} ${r.detalle_tiempo ? '· ' + r.detalle_tiempo : ''}</div>
                   </div>
                 </div>
                 <div class="tl-right">
@@ -1273,16 +1284,16 @@
         camposHtml += `<div style="display:flex;justify-content:space-between;padding:8px 0;font-size:13px;border-bottom:1px solid var(--line);"><span style="color:var(--muted);">Precio / Litro</span><strong style="color:var(--text);">${(d.precio_litro || 0).toFixed(3)} €/L</strong></div>`;
       }
       if (d.gasolinera) {
-        camposHtml += `<div style="display:flex;justify-content:space-between;padding:8px 0;font-size:13px;border-bottom:1px solid var(--line);"><span style="color:var(--muted);">Estación</span><strong style="color:var(--text);">${d.gasolinera}</strong></div>`;
+        camposHtml += `<div style="display:flex;justify-content:space-between;padding:8px 0;font-size:13px;border-bottom:1px solid var(--line);"><span style="color:var(--muted);">Estación</span><strong style="color:var(--text);">${esc(d.gasolinera)}</strong></div>`;
       }
       if (d.taller) {
-        camposHtml += `<div style="display:flex;justify-content:space-between;padding:8px 0;font-size:13px;border-bottom:1px solid var(--line);"><span style="color:var(--muted);">Taller</span><strong style="color:var(--text);">${d.taller}</strong></div>`;
+        camposHtml += `<div style="display:flex;justify-content:space-between;padding:8px 0;font-size:13px;border-bottom:1px solid var(--line);"><span style="color:var(--muted);">Taller</span><strong style="color:var(--text);">${esc(d.taller)}</strong></div>`;
       }
       if (d.tipo_gasto) {
-        camposHtml += `<div style="display:flex;justify-content:space-between;padding:8px 0;font-size:13px;border-bottom:1px solid var(--line);"><span style="color:var(--muted);">Tipo</span><strong style="color:var(--text);">${d.tipo_gasto}</strong></div>`;
+        camposHtml += `<div style="display:flex;justify-content:space-between;padding:8px 0;font-size:13px;border-bottom:1px solid var(--line);"><span style="color:var(--muted);">Tipo</span><strong style="color:var(--text);">${esc(d.tipo_gasto)}</strong></div>`;
       }
       if (d.notas) {
-        camposHtml += `<div style="padding:8px 0;font-size:13px;color:var(--muted);"><span style="color:var(--muted);display:block;margin-bottom:2px;">Notas:</span>${d.notas}</div>`;
+        camposHtml += `<div style="padding:8px 0;font-size:13px;color:var(--muted);"><span style="color:var(--muted);display:block;margin-bottom:2px;">Notas:</span>${esc(d.notas)}</div>`;
       }
 
       document.getElementById('m-det-campos').innerHTML = camposHtml || '<div style="font-size:12px;color:var(--muted);">Sin detalles adicionales</div>';
@@ -1296,7 +1307,7 @@
 
       // Botón Borrar
       document.getElementById('m-btn-borrar-ev').onclick = () => {
-        if (confirm(`¿Eliminar este registro de ${it.titulo}?`)) {
+        if (confirm(`¿Eliminar este registro de ${esc(it.titulo)}?`)) {
           mEliminarEvento(it.coleccion, it.id);
         }
       };
@@ -1417,9 +1428,9 @@
         try {
           let r;
           if (p.eliminar) {
-            r = await fetch(`/api/evento/${p.coleccion}/${p.item.id}`, { method: 'DELETE' });
+            r = await fetch(`/api/evento/${encodeURIComponent(p.coleccion)}/${encodeURIComponent(p.item.id)}`, { method: 'DELETE' });
           } else if (p.editar) {
-            r = await fetch(`/api/evento/${p.coleccion}/${p.item.id}`, {
+            r = await fetch(`/api/evento/${encodeURIComponent(p.coleccion)}/${encodeURIComponent(p.item.id)}`, {
               method: 'PUT', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ item: p.item })
             });
           } else {
