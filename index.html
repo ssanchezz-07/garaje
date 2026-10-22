@@ -1241,7 +1241,7 @@
                   <div class="tl-badge ${r.estado_alerta === 'vencido' ? 'estado-vencido' : (r.estado_alerta === 'urgente' ? 'tipo-recordatorio' : 'tipo-' + (r.tipo === 'repostaje' ? 'repostaje' : 'servicio'))}">${iconoTipo(r.tipo === 'repostaje' ? 'repostaje' : 'servicio')}</div>
                   <div>
                     <div class="tl-titulo">${esc(r.titulo)}</div>
-                    <div class="tl-sub">${esc(r.detalle_km || '')} ${r.detalle_tiempo ? '· ' + r.detalle_tiempo : ''}</div>
+                    <div class="tl-sub">${esc(r.detalle_km || '')} ${r.detalle_tiempo ? '· ' + esc(r.detalle_tiempo) : ''}</div>
                   </div>
                 </div>
                 <div class="tl-right">
