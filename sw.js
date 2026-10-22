@@ -1,5 +1,5 @@
 // Service Worker de la PWA de Garaje
-const CACHE_NAME = 'garaje-v3';
+const CACHE_NAME = 'garaje-v4';
 const ASSETS = [
   './',
   './index.html',
